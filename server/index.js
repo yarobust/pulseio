@@ -9,26 +9,36 @@ import { Room } from './game/Room.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
  
 const app = express();
-const server = createServer(app);
-const io = new Server(server);
+const server = createServer(app); 
+const ioServer = new Server(server);
 
 app.use(express.static(join(__dirname, '../client')));
 
+//return information about available rooms
 app.get('/rooms', (req, res) => {
   const rooms = roomList.map((room) => {
     return {
       id: room.id,
-      playerLimit: room.playerLimit,
-      playerNumber: room.playerNumber
+      playerNumber: room.players,
+      playerLimit: room._playerLimit,
     }
   })
-  res.json(rooms)
+  res.json(rooms);
 })
 
-const roomList = [new Room(io), new Room(io)];
+const roomList = [new Room(ioServer), new Room(ioServer)];
+roomList[0].startGame();
+roomList[1].startGame();
 
-io.on('connection', (socket) => {
-  const roomId = socket.handshake.query['roomId'];
+//todo: make some auth
+ioServer.use((socket, next) => {
+  socket;
+  next(); 
+})
+
+ioServer.on('connection', (socket) => {
+  console.log('new connection');
+  const {roomId} = socket.handshake.query;
   const roomToConnect = roomList.find((room) => room.id === roomId);
   if (!roomToConnect) {
     socket.disconnect(true);

@@ -10,7 +10,7 @@ export function RoomList({connectToRoom}) {
 
   const handleRoomListClick = (event) => {
     // if (event.target.class)
-    if (event.target.classList.contains('room-list__button')){
+    if (event.target.classList.contains('room-list__play-button')){
       connectToRoom(event.target.parentNode.id);
     }
   }
@@ -25,7 +25,7 @@ export function RoomList({connectToRoom}) {
         const descriptionElm = document.createElement('span');
         descriptionElm.textContent = `name: ${room.id.slice(0, 8)}|players: ${room.playerNumber}/${room.playerLimit}`;
         const buttonElm = document.createElement('button');
-        buttonElm.classList.add('room-list__button')
+        buttonElm.classList.add('room-list__play-button')
         buttonElm.textContent = 'Play';
         roomElm.append(descriptionElm, buttonElm)
         roomListElm.append(roomElm);
