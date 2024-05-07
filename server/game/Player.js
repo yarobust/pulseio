@@ -10,7 +10,7 @@ export class Player {
     this._acceleration = 0.000275; //px/ms
     this._friction = 0.001;
 
-    this._controls = [false, false, false, false, false]
+    this._controls = [false, true, true, false, false]
   }
 
   move(deltaTime) {

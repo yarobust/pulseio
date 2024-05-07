@@ -33,7 +33,6 @@ export class Room {
       for (let i = 0; i<6; i++){
         validatedDirection.push(!!direction[i]);
       }
-      console.log(validatedDirection);
       this._game.updatePlayerDirection(socket.id, validatedDirection);
     })
 

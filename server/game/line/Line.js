@@ -9,12 +9,25 @@ export class Line {
     this._lineWidth = data.lineWidth || 1;
   }
   /** @param {CanvasRenderingContext2D} ctx */
-  draw(ctx){
+  draw(ctx) {
     ctx.beginPath();
     ctx.moveTo(this._x0, this._y0);
     ctx.lineTo(this._x1, this._y1);
     ctx.strokeStyle = this._color;
     ctx.lineWidth = this._lineWidth;
     ctx.stroke();
+  }
+
+  get x0() {
+    return this._x0;
+  }
+  get y0() {
+    return this._y0;
+  }
+  get x1() {
+    return this._x1;
+  }
+  get y1() {
+    return this._y1;
   }
 }

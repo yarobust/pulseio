@@ -28,7 +28,7 @@ app.get('/rooms', (req, res) => {
 
 const roomList = [new Room(ioServer), new Room(ioServer)];
 roomList[0].startGame();
-roomList[1].startGame();
+// roomList[1].startGame();
 
 //todo: make some auth
 ioServer.use((socket, next) => {
