@@ -20,7 +20,7 @@ app.get('/rooms', (req, res) => {
     return {
       id: room.id,
       playerNumber: room.players,
-      playerLimit: room._playerLimit,
+      playerLimit: room.playersLimit,
     }
   })
   res.json(rooms);

@@ -1,34 +1,43 @@
+interface CircleConstructorData {
+  x: number,
+  y: number,
+  r: number,
+  lineWidth?: number,
+  strokeStyle?: string,
+  fillStyle?: string,
+}
+
+interface PlayerConstructorData extends CircleConstructorData {
+  id: string,
+  actionStrokeStyle?: string
+}
+
+interface BallConstructorData extends CircleConstructorData {
+}
 
 type Controls = boolean[]
 
-interface circleData {
+interface CircleData {
   x: number,
   y: number,
   r: number,
   xVelocity: number,
   yVelocity: number,
-  acceleration?: number,
-  friction?: number,
+  acceleration: number,
+  friction: number,
+  lineWidth?: number,
+  strokeStyle?: string,
+  fillStyle?: string,
 }
 
-interface ballData extends circleData {
+interface BallData extends CircleData {
 
 }
 
-interface playerData extends circleData {
+interface PlayerData extends CircleData {
   id: string,
   controls?: Controls,
-}
-
-interface gameInitData {
-  width: number,
-  height: number,
-  mainPlayer: playerData, //The player you are playing on
-}
-
-interface gameStateData {
-  players: playerData[]
-  ball?: ballData
+  actionStrokeStyle?: string
 }
 
 interface LineData {
@@ -36,10 +45,39 @@ interface LineData {
   y0: number,
   x1: number,
   y1: number,
-  color?: 'string',
+  color?: string,
   lineWidth?: number,
 }
 
 interface WallData extends LineData {
-  type?: 'normal' | 'bouncy'| 'goal-line',
+  type?: 'normal' | 'bouncy' | 'goal-line',
+}
+
+interface StadiumData {
+  walls: WallData[],
+  lines: LineData[],
+  circles: CircleData[],
+}
+
+interface GameInitData {
+  width: number,
+  height: number,
+  players: PlayerData[],
+  ball: BallData,
+  stadium: StadiumData,
+  score: number[],
+  timeLeft?: number //ms
+}
+
+interface GameStateData {
+  players: PlayerData[]
+  ball: BallData
+}
+
+
+
+interface RestartGameData {
+  score: number[],
+  players: PlayerData[],
+  ball: BallData
 }
