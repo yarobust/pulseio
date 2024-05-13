@@ -7,6 +7,8 @@ import { App } from '../app.js';
 export function RoomList({connectToRoom}) {
   const roomListElm = document.createElement('div');
   roomListElm.id = 'room-list'
+  const containerElm = document.createElement('div');
+  containerElm.classList.add('room-list__container');
 
   const handleRoomListClick = (event) => {
     // if (event.target.class)
@@ -28,7 +30,7 @@ export function RoomList({connectToRoom}) {
         buttonElm.classList.add('room-list__play-button')
         buttonElm.textContent = 'Play';
         roomElm.append(descriptionElm, buttonElm)
-        roomListElm.append(roomElm);
+        containerElm.append(roomElm);
 
         roomElm.addEventListener('mouseup', handleRoomListClick)
       })
@@ -37,8 +39,9 @@ export function RoomList({connectToRoom}) {
       const errorElm = document.createElement('p');
       errorElm.classList.add('error');
       errorElm.textContent = 'Unable to fetch rooms';
-      roomListElm.append(errorElm);
+      containerElm.append(errorElm);
     });
   
+    roomListElm.append(containerElm);
   return roomListElm;
 }

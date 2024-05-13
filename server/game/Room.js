@@ -9,11 +9,11 @@ export class Room {
     this._id = uuidv4();
     /** @type {Socket[]} */
     this._players = [];
-    this._playersLimit = 2;
+    this._playersLimit = 8;
 
-    this._winningScore = 3;
+    this._winningScore = 1;
     this._startTime = 0;
-    this._gameTimeLimit = 5000; //ms
+    this._gameTimeLimit = 1135000; //ms
     /** @type {Game} */
     this._game = new Game(this._playersLimit);
     this._tickLengthMs = 1000 / 20;
@@ -48,13 +48,11 @@ export class Room {
     const timeLeft = Math.max(this._gameTimeLimit - (performance.now() - this._startTime), -1);
     //return data about all static objects (e.g. walls)
     socket.emit('game:init', {...this._game.initData, timeLeft});
-    socket.broadcast.to(this._id).emit('player:add', socket.id);
   }
   handlePlayerDisconnection(socket) {
     // console.log(`player ${socket.id} disconnected from room ${this._id}`);
     this._game.removePlayer(socket.id);
     this._players = this._players.filter((player) => player.id !== socket.id);
-    socket.broadcast.to(this._id).emit('player:remove', socket.id);
   }
 
   startGame() {
@@ -71,6 +69,7 @@ export class Room {
         previousTime = currentTime;
         remainder = (deltaTime + remainder) % this._tickLengthMs;
 
+        
         //winning condition 
         if(this._game.checkGoal()) {
           if (Math.max(...this._game.score) >= this._winningScore) {
@@ -86,9 +85,9 @@ export class Room {
           return;
         }
 
-        //game update
+         //game update
         const gameStateData = this._game.updateGameState(this._tickLengthMs);
-        this._ioServer.to(this._id).emit('game:update', gameStateData)
+        this._ioServer.to(this._id).emit('game:update', gameStateData);
 
       } 
       this._gameLoopTimeoutId = setTimeout(gameLoop, 0);

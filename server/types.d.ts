@@ -9,7 +9,8 @@ interface CircleConstructorData {
 
 interface PlayerConstructorData extends CircleConstructorData {
   id: string,
-  actionStrokeStyle?: string
+  actionStrokeStyle?: string,
+  command: string
 }
 
 interface BallConstructorData extends CircleConstructorData {

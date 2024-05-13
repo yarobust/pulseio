@@ -16,7 +16,7 @@ yarn-error.log*
 *.pid.lock
 *.sql
 *.sqlite
-
+diagrams/
 
 # ignore packaged files
 *.7z

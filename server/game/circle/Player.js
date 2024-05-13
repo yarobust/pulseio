@@ -3,9 +3,10 @@ import { Circle } from './Circle.js';
 export class Player extends Circle {
   /** @param {PlayerConstructorData} data  */
   constructor(data) {
-    const {id, actionStrokeStyle, ...restData} = data;
+    const {id, actionStrokeStyle, command, ...restData} = data;
     super(data);
     this._id = id;
+    this._command = command;
     this._controls = Array(5).map(() => false);
     this._actionStrokeStyle = actionStrokeStyle || 'red';
   }
@@ -87,6 +88,16 @@ export class Player extends Circle {
   }
   get controls(){
     return [...this._controls];
+  }
+
+  get command(){
+    return this._command;
+  }
+  reset(data){
+    super.reset(data.x, data.y);
+    this._command = data.command;
+    this._fillStyle = data.fillStyle;
+    this._controls = Array(5).map(() => false);
   }
  /** @returns {PlayerData} */
   getData(){

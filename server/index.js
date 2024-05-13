@@ -28,6 +28,7 @@ app.get('/rooms', (req, res) => {
 
 const roomList = [new Room(ioServer), new Room(ioServer)];
 roomList[0].startGame();
+roomList[1].startGame();
 // roomList[1].startGame();
 
 //todo: make some auth
@@ -38,7 +39,7 @@ ioServer.use((socket, next) => {
 
 ioServer.on('connection', (socket) => {
   console.log('new connection');
-  const {roomId} = socket.handshake.query;
+  const {roomId, name} = socket.handshake.query;
   const roomToConnect = roomList.find((room) => room.id === roomId);
   if (!roomToConnect) {
     socket.disconnect(true);

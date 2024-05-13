@@ -31,7 +31,6 @@ export class Game {
       circles: []
     }
 
-    // left team and right team spawn points
     this._leftSpawnPoints = [];
     this._rightSpawnPoints = [];
 
@@ -43,21 +42,80 @@ export class Game {
    * @param {String} playerId 
    */
   addPlayer(playerId) {
-    // should decide where to place player
+    let x, y, fillStyle, command;
+    if (!this._players.length) {
+      command = 'l';
+      fillStyle = 'red';
+      [x, y] = this._leftSpawnPoints[0];
+    } else { 
+      const spawnNum = Math.floor(this._players.length/2)
+      if (this._players[this._players.length-1].command === 'l') {
+        command = 'r';
+        fillStyle = 'blue';
+        [x, y] = this._rightSpawnPoints[spawnNum];
+      } else {
+        command = 'l';
+        fillStyle = 'red';
+        [x, y] = this._leftSpawnPoints[spawnNum];
+      }
+    }
+
     this._players.push(new Player({
       id: playerId,
-      x: Math.random() * (this._width - PLAYER_RADIUS) + PLAYER_RADIUS,
-      y: 400,
+      x,
+      y,
       r: PLAYER_RADIUS,
       lineWidth: 3,
-      fillStyle: 'green',
+      fillStyle,
+      command
     }));
   }
   /** 
    * @param {String} playerId
-   */
-  removePlayer(playerId) {
-    this._players = this._players.filter((player) => player._id !== playerId);
+   */ 
+  removePlayer(playerId) { 
+    let playersDifference = 0;
+    let removedPlayerCommand = '';
+    let rearrangedTarget = null; 
+    //should move the first player of the team!!!
+    
+    for (let player of this._players) {
+      if (player.id === playerId) {
+        removedPlayerCommand = player.command;
+        continue;
+      }
+      if (player.command === 'l') {
+        playersDifference++;
+      } else {
+        playersDifference--;
+      }
+    }
+
+    const rearangedPlayers = [];
+    for(let player of this._players) {
+      if (player.id === playerId) {
+        continue;
+      }
+      if(Math.abs(playersDifference) > 1 && !rearrangedTarget && player.command !== removedPlayerCommand) {
+        const spawnNum = Math.floor(this._playersLimit/2 * Math.random())
+        let x, y, fillStyle, command;
+        if(removedPlayerCommand === 'l') {
+          command = 'l';
+          fillStyle = 'red';
+          [x,y] = this._leftSpawnPoints[spawnNum];
+        } else {
+          command = 'r';
+          fillStyle = 'blue';
+          [x,y] = this._rightSpawnPoints[spawnNum];
+        }
+        player.reset({x,y,command,fillStyle})
+        rearrangedTarget = player;
+        continue;
+      }
+      rearangedPlayers.push(player);
+    }
+    rearrangedTarget && rearangedPlayers.push(rearrangedTarget);
+    this._players = rearangedPlayers;
   }
 
   updatePlayerDirection(playerId, direction) {
@@ -87,7 +145,7 @@ export class Game {
     })
 
 
-    //collision with players
+    //collision player-player
     for (let currentPlayer = 0; currentPlayer < this._players.length - 1; currentPlayer++) {
       for (let nextPlayer = currentPlayer + 1; nextPlayer < this._players.length; nextPlayer++) {
         if (this._players[currentPlayer].checkCircleCollision(this._players[nextPlayer])) {
@@ -96,7 +154,7 @@ export class Game {
       }
     }
 
-    //players' collision with ball
+    //players-ball collision
     this._players.forEach((player) => {
       if (player.checkCircleCollision(this._ball)) {
         player.resolveCircleCollision(this._ball);
@@ -110,10 +168,10 @@ export class Game {
   }
 
   checkGoal() {
-    if (this._ball.x < 0) {
+    if (this._ball.x < 0 - this._ball.r) {
       this._score[0]++;
       return true;
-    } else if (this._ball.x > this._width) {
+    } else if (this._ball.x > this._width + this._ball.r) {
       this._score[1]++;
       return true;
     }
@@ -121,22 +179,57 @@ export class Game {
   }
 
   /** @returns {RestartGameData} */
-  resetRound(){
+  resetRound() {
     this._ball.reset(this._width / 2, this._height / 2);
-    // restart players position
+    
+    let lNum = 0;
+    let rNum = 0;
+    this._players.forEach((player) => {
+      let x, y, fillStyle, command;
+        if(player.command === 'l') {
+          command = 'l';
+          fillStyle = 'red';
+          [x,y] = this._leftSpawnPoints[lNum];
+          lNum++;
+        } else {
+          command = 'r';
+          fillStyle = 'blue';
+          [x,y] = this._rightSpawnPoints[rNum];
+          rNum++;
+        }
+        player.reset({x,y,command,fillStyle});
+    })
+    
     return {
       score: this._score,
       ball: this._ball.getData(),
       players: this._players.map((player) => player.getData()),
     }
   }
-  
-  
+
+
   /** @returns {RestartGameData} */
   reset() {
     this._score = [0, 0];
     this._ball.reset(this._width / 2, this._height / 2);
     // restart players position
+
+    const randomOffset = Math.floor(Math.random() * this._players.length);
+    this._players.forEach((player, i) => {
+      const newI = (i + randomOffset) % this._players.length;
+      const spawnNum = Math.floor( newI / 2);
+      let x, y, fillStyle, command;
+        if(newI % 2 === 1) {
+          command = 'l';
+          fillStyle = 'red';
+          [x,y] = this._leftSpawnPoints[spawnNum];
+        } else {
+          command = 'r';
+          fillStyle = 'blue';
+          [x,y] = this._rightSpawnPoints[spawnNum];
+        }
+        player.reset({x,y,command,fillStyle});
+    })
 
     return {
       score: this._score,
@@ -155,18 +248,18 @@ export class Game {
       y: this._height / 2,
     }
     const rightCentre = {
-      x: 3 * this._width / 4,
-      y: this._height / 2, 
+      x: 3 * this._width / 4, 
+      y: this._height / 2,
     }
-    for (let i = 1; i <= (this._playersLimit / 2); i++) {
-      const x = (Math.cos(i / (this._playersLimit / 2) * 2 * Math.PI) * r) + leftCentre.x; 
+    for (let i = 0; i <= (this._playersLimit / 2) - 1; i++) {
+      const x = (Math.cos(i / (this._playersLimit / 2) * 2 * Math.PI) * r) + leftCentre.x;
       const y = (Math.sin(i / (this._playersLimit / 2) * 2 * Math.PI) * r) + leftCentre.y;
-this._leftSpawnPoints.push([x,y]);
+      this._leftSpawnPoints.push([x, y]);
     }
-    for (let i = 1; i <= (this._playersLimit / 2); i++) {
-      const x = (Math.cos(i / (this._playersLimit / 2) * 2 * Math.PI + Math.PI) * r) + rightCentre.x; 
+    for (let i = 0; i <= (this._playersLimit / 2) - 1; i++) {
+      const x = (Math.cos(i / (this._playersLimit / 2) * 2 * Math.PI + Math.PI) * r) + rightCentre.x;
       const y = (Math.sin(i / (this._playersLimit / 2) * 2 * Math.PI + Math.PI) * r) + rightCentre.y;
-this._rightSpawnPoints.push([x,y]);
+      this._rightSpawnPoints.push([x, y]);
     }
   }
 

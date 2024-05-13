@@ -6,32 +6,74 @@ declare global {
 
 type Controls = boolean[]
 
-interface circleData {
+interface CircleData {
   x: number,
   y: number,
   r: number,
   xVelocity: number,
   yVelocity: number,
-  acceleration?: number,
-  friction?: number,
+  acceleration: number,
+  friction: number,
+  lineWidth?: number,
+strokeStyle?: string,
+fillStyle?: string,
 }
 
-interface ballData extends circleData {
+interface BallData extends CircleData {
 
 }
 
-interface playerData extends circleData {
+interface PlayerData extends CircleData {
   id: string,
   controls?: Controls,
+  actionStrokeStyle?: string
 }
 
-interface gameInitData {
+interface LineData {
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  color?: string,
+  lineWidth?: number,
+}
+
+interface WallData extends LineData {
+  type?: 'normal' | 'bouncy'| 'goal-line',
+}
+
+interface StadiumData {
+  walls: WallData[],
+  lines: LineData[],
+  circles: CircleData[],
+}
+
+interface GameInitData {
   width: number,
   height: number,
-  mainPlayer: playerData, //The player you are playing on
+  players: PlayerData[],
+  ball: BallData,
+  stadium: StadiumData,
+  score: number[],
+  timeLeft?: number //ms
 }
 
-interface gameStateData {
-  players: playerData[]
-  ball: ballData
+interface GameStateData {
+  players: PlayerData[]
+  ball: BallData
 }
+
+interface gameRestartData {
+  score: number[],
+  timeLeft?: number, // ms
+  players: PlayerData[],
+  ball: BallData,
+}
+
+
+
+interface continueEventData {
+  dateNow: number,
+  timeout: number
+}
+
