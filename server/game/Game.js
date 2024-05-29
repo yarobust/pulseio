@@ -167,7 +167,7 @@ export class Game {
       }
     })
 
-    this.handleGoal();
+    !this._isGoal && this.handleGoal();
 
     this._gameState = {
       players: this._players.map((player) => player.getData()),
@@ -183,6 +183,7 @@ export class Game {
       this._score[0]++;
       this._isGoal = true;
     }
+
     return false;
   }
 
