@@ -3,22 +3,23 @@ import { Game } from './Game.js';
 import { v4 as uuidv4 } from 'uuid';
  
 export class Room { 
-  /** @param {import('socket.io').Server} ioServer */
-  constructor(ioServer) {
+  /** @param {{ioServer: import('socket.io').Server, roomName: string}} param0 */
+  constructor({ioServer, roomName}) {
     this._ioServer = ioServer;
     this._id = uuidv4();
+    this._name = roomName;
     /** @type {Socket[]} */
     this._players = [];
     this._playersLimit = 8;
 
-    this._winningScore = 1;
+    this._winningScore = 5;
     this._startTime = 0;
     this._gameTimeLimit = 1135000; //ms
     /** @type {Game} */
     this._game = new Game(this._playersLimit);
     this._tickLengthMs = 1000 / 20;
     this._gameLoopTimeoutId;
-  }
+  } 
   /** @param {import('socket.io').Socket} socket  */
   handlePlayerConnection(socket) {
     // should be placed before 'socket:disconnect' handler. Unnecessary to handle disconnection of not yet added player
@@ -68,10 +69,9 @@ export class Room {
       if (deltaTime + remainder > this._tickLengthMs) {
         previousTime = currentTime;
         remainder = (deltaTime + remainder) % this._tickLengthMs;
-
         
         //winning condition 
-        if(this._game.checkGoal()) {
+        if(this._game.handleGoal()) {
           if (Math.max(...this._game.score) >= this._winningScore) {
             this.restartGame();
             return;
@@ -119,5 +119,8 @@ export class Room {
   }
   get playersLimit() {
     return this._playersLimit;
+  }
+  get name() {
+    return this._name;
   }
 }

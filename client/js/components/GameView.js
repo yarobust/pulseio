@@ -1,9 +1,33 @@
-export function GameView({handleExit=()=>{}}={}) {
+import { SettingsDialog } from './SettingsDialog.js';
+import { ScreenControls } from './ScreenControls.js';
+
+const settingsItems = [{
+  id: 'settings-screen-controls',
+  name: 'screenControls',
+  text: 'Screen controls'
+},{
+  id: 'audio',
+  name: 'audio',
+  text: 'Allow audio'
+}];
+
+export function GameView({handleExit}) {
   const gameViewElm = document.createElement('div');
   gameViewElm.id = 'game-view';
+  gameViewElm.tabIndex = 1;
   const containerElm = document.createElement('div');
   containerElm.classList.add('game-view__container');
 
+  function handleSettingsChange(settings) {
+    if (settings.screenControls){
+      canvasContainerElm.append(ScreenControls());
+    } else {
+      canvasContainerElm.querySelector('#screen-controls')?.remove();
+    }
+  }
+  const settingsDialogElm = SettingsDialog(handleSettingsChange, settingsItems);
+
+  //bar
   const barContainerElm = document.createElement('div');
   barContainerElm.classList.add('game-view__bar-container');
   const barElm = document.createElement('div');
@@ -22,18 +46,21 @@ export function GameView({handleExit=()=>{}}={}) {
   exitBtn.textContent = 'exit'
   exitBtn.addEventListener('click', handleExit);
 
+  const settingsButton = document.createElement('button');
+  settingsButton.classList.add('bar__settings-btn', 'settings-btn');
+  settingsButton.addEventListener('click', (e)=>{settingsDialogElm.classList.remove('settings-dialog--hidden')});
+
+  //game
   const canvasContainerElm = document.createElement('div');
   canvasContainerElm.classList.add('game-view__canvas-container');
   const canvasElm = document.createElement('canvas');
   canvasElm.id = 'canvas';
-  canvasElm.tabIndex = 1;
 
-
-  barElm.append(scoreElm, timerElm, exitBtn);
+  barElm.append(scoreElm, timerElm, exitBtn, settingsButton);
   barContainerElm.append(barElm);
   canvasContainerElm.append(canvasElm);
   containerElm.append(barContainerElm, canvasContainerElm);
-  gameViewElm.append(containerElm);
+  gameViewElm.append(containerElm, settingsDialogElm);
 
   return gameViewElm;
 }

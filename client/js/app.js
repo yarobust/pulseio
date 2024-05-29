@@ -1,7 +1,6 @@
 import { BACKEND_URL } from './constants.js';
 import { RoomList } from './components/RoomList.js';
 import { GameView } from './components/GameView.js';
-import { Player } from './player.js';
 import { Game } from './game/Game.js';
 import { ContinueDialog } from './components/ContinueDialog.js';
 import { DisconnectDialog } from './components/DisconnectDialog.js';
@@ -13,11 +12,12 @@ export class App {
     this._socket = null;
     this._game = null;
     // for debug purposes
-    this._randomLatencygMs = 1 || Math.random() * 100 + 200;
+    this._randomLatencygMs = 0 || Math.random() * 100 + 200;
     this._gameTimer = 0;
     this._gameTimerId = 0;
   }
   //add htmlElement to app root
+  
   showRoomList() {
     this._game && this._game.stop();
     this._game = null;
@@ -118,7 +118,8 @@ export class App {
     this.setGameScore(data.score);
     this.setGameTimer(data.timeLeft);
 
-    this.bindControls(canvas);
+    const gameViewElm = document.querySelector('#game-view');
+    this.bindControls(gameViewElm);
 
     const { width: dWidth, height: dHeight } = gameContainerElm.getBoundingClientRect();
 
@@ -148,8 +149,7 @@ export class App {
       this._game.reset(restData);
       this._game.start();
 
-      const canvas = document.querySelector('#canvas');
-      canvas.focus();
+      gameViewElm.focus();
     })
 
     this._socket.on('game:continue', /** @param {import('../types.js').continueEventData} data */(data, callback) => {
@@ -164,14 +164,11 @@ export class App {
     })
   }
 
-
-
-
-  bindControls(canvas) {
+  bindControls(gameView) {
     const controls = [false, false, false, false, false];
     let isNewDirection = false;
-    canvas.focus();
-    canvas.addEventListener('keydown', (e) => {
+    gameView.focus();
+    gameView.addEventListener('keydown', (e) => {
       switch (e.code) {
         case 'KeyW': {
           if (!controls[0]) { isNewDirection = true; }
@@ -205,7 +202,7 @@ export class App {
       }
     });
 
-    canvas.addEventListener('keyup', (e) => {
+    gameView.addEventListener('keyup', (e) => {
       switch (e.code) {
         case 'KeyW': {
           isNewDirection = true;

@@ -4,15 +4,19 @@ import { Ball } from './circle/Ball.js';
 import { Line } from './line/Line.js';
 import { Wall } from './line/Wall.js';
 
-const PLAYER_RADIUS = 20;
-const BALL_RADIUS = 10;
+const PLAYER_RADIUS = 20 * 1;
+const BALL_RADIUS = 10 * 1;
 
 export class Game {
   constructor(playersLimit) {
     this._playersLimit = playersLimit;
-    this._width = 990;
-    this._height = 510;
+    this._width = 990 * 1;
+    this._height = 510 * 1;
     this._score = [0, 0];
+    this.isGoal = false;
+    this._gameState = {
+
+    };
     /** @type {Player[]} */
     this._players = [];
     /** @type {Ball} */
@@ -33,6 +37,10 @@ export class Game {
 
     this._leftSpawnPoints = [];
     this._rightSpawnPoints = [];
+
+    this._gameLoopTimeoutId;
+    this._tickLengthMs = 1000 / 20;
+    this._startTime = 0;
 
     //should go before buildStadium
     this.createSpawnPoints();
@@ -125,6 +133,7 @@ export class Game {
   /** @return {GameStateData} */
   updateGameState(deltaTime) {
 
+
     // console.log('game state update')
     this._players.forEach((player) => {
       player.move(deltaTime);
@@ -161,19 +170,21 @@ export class Game {
       }
     })
 
+    this.handleGoal();
+
     return {
       players: this._players.map((player) => player.getData()),
       ball: this._ball.getData(),
     }
   }
 
-  checkGoal() {
+  handleGoal() {
     if (this._ball.x < 0 - this._ball.r) {
-      this._score[0]++;
-      return true;
-    } else if (this._ball.x > this._width + this._ball.r) {
       this._score[1]++;
-      return true;
+      this._isGoal = true;
+    } else if (this._ball.x > this._width + this._ball.r) {
+      this._score[0]++;
+      this._isGoal = true;
     }
     return false;
   }
@@ -207,6 +218,30 @@ export class Game {
     }
   }
 
+  start(){
+    clearTimeout(this._gameLoopTimeoutId);
+    // possible questions???
+    this._startTime = performance.now();
+    let previousTime = this._startTime;
+    let remainder = 0;
+    const gameLoop = () => {
+      const currentTime = performance.now();
+      const deltaTime = currentTime - previousTime;
+      // |____1000____|15|____2000____|30|
+      if (deltaTime + remainder > this._tickLengthMs) {
+        previousTime = currentTime;
+        remainder = (deltaTime + remainder) % this._tickLengthMs;
+         //game update
+        this.updateGameState(this._tickLengthMs);
+      } 
+      this._gameLoopTimeoutId = setTimeout(gameLoop, 0);
+    };
+    gameLoop();
+  }
+
+  stop() {
+    
+  }
 
   /** @returns {RestartGameData} */
   reset() {
@@ -267,21 +302,26 @@ export class Game {
     const goalLineSize = Math.min(BALL_RADIUS * 10, this._height);
     const goalLineY0 = this._height / 2 - goalLineSize / 2;
     const goalLineY1 = goalLineY0 + goalLineSize;
+    const lineWidth = Math.round(BALL_RADIUS / 10);
+
     this._stadium.walls.push(new Wall({
       x0: 0,
       y0: goalLineY0,
       x1: 0,
-      y1: 0
+      y1: 0,
+      lineWidth,
     }), new Wall({
       x0: 0,
       y0: 0,
       x1: this._width,
-      y1: 0
+      y1: 0,
+      lineWidth,
     }), new Wall({
       x0: this._width,
       y0: 0,
       x1: this._width,
-      y1: goalLineY0
+      y1: goalLineY0,
+      lineWidth,
     }), new Wall({
       x0: this._width,
       y0: goalLineY0,
@@ -289,22 +329,25 @@ export class Game {
       y1: goalLineY1,
       type: 'goal-line',
       color: 'blue',
-      lineWidth: 3,
+      lineWidth,
     }), new Wall({
       x0: this._width,
       y0: goalLineY1,
       x1: this._width,
-      y1: this._height
+      y1: this._height,
+      lineWidth,
     }), new Wall({
       x0: this._width,
       y0: this._height,
       x1: 0,
-      y1: this._height
+      y1: this._height,
+      lineWidth,
     }), new Wall({
       x0: 0,
       y0: this._height,
       x1: 0,
-      y1: goalLineY1
+      y1: goalLineY1,
+      lineWidth,
     }), new Wall({
       x0: 0,
       y0: goalLineY1,
@@ -316,39 +359,45 @@ export class Game {
     }),
     )
 
+    //centre line
     this._stadium.lines.push(new Line({
       x0: this._width / 2,
       y0: 0,
       x1: this._width / 2,
       y1: this._height,
+      lineWidth,
     }))
 
+    //centre circle and side circles
     this._stadium.circles.push(new Circle({
       x: this._width / 2,
       y: this._height / 2,
-      r: goalLineSize / 2
+      r: goalLineSize / 2,
+      lineWidth,
     }), new Circle({
       x: 0,
       y: this._height / 2,
       r: goalLineSize / 2,
+      lineWidth,
     }), new Circle({
       x: this._width,
       y: this._height / 2,
       r: goalLineSize / 2,
+      lineWidth,
     }));
 
     this._leftSpawnPoints.forEach((point) => {
       this._stadium.circles.push(new Circle({
         x: point[0],
         y: point[1],
-        r: 4,
-        lineWidth: 0,
+        r: BALL_RADIUS / 2,
+        lineWidth,
         fillStyle: 'red'
       }), new Circle({
         x: point[0],
         y: point[1],
-        r: 10,
-        lineWidth: 1,
+        r: BALL_RADIUS,
+        lineWidth,
         strokeStyle: 'red'
       }))
     });
@@ -357,14 +406,14 @@ export class Game {
       this._stadium.circles.push(new Circle({
         x: point[0],
         y: point[1],
-        r: 4,
-        lineWidth: 0,
+        r: BALL_RADIUS / 2,
+        lineWidth,
         fillStyle: 'blue'
       }), new Circle({
         x: point[0],
         y: point[1],
-        r: 10,
-        lineWidth: 1,
+        r: BALL_RADIUS,
+        lineWidth,
         strokeStyle: 'blue'
       }))
     })

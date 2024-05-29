@@ -21,12 +21,13 @@ app.get('/rooms', (req, res) => {
       id: room.id,
       playerNumber: room.players,
       playerLimit: room.playersLimit,
+      name: room.name,
     }
   })
   res.json(rooms);
 })
 
-const roomList = [new Room(ioServer), new Room(ioServer)];
+const roomList = [new Room({ioServer, roomName: 'some cool name'}), new Room({ioServer, roomName: 'royale battle'})];
 roomList[0].startGame();
 roomList[1].startGame();
 // roomList[1].startGame();

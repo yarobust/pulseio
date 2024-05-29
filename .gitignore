@@ -5,7 +5,7 @@ node_modules/
 /build
 /dist
 
-# ignore log files and databases
+# ignore log files, databases and images
 logs/
 *.log
 npm-debug.log*
@@ -17,6 +17,7 @@ yarn-error.log*
 *.sql
 *.sqlite
 diagrams/
+images/
 
 # ignore packaged files
 *.7z

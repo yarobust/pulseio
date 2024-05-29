@@ -11,6 +11,10 @@ body {
   height: 100vh;
 }
 
+button {
+  cursor: pointer;
+}
+
 #app {
   width: 100%;
   height: 100%;
@@ -26,9 +30,20 @@ body {
   border-radius: 0.2rem;
   border: 1px solid black;
   padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  white-space: pre;
 }
 
-#game-view, #room-list {
+#room-list .room-list__play-button {
+  margin-left: 0.5rem;
+}
+
+/* --------------- */
+
+#game-view,
+#room-list {
   width: 100%;
   height: 100%;
   display: grid;
@@ -40,7 +55,18 @@ body {
 #game-view .game-view__container {
   width: 100%;
   height: 100%;
+  display: grid;
+  place-content: center;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: none;
 }
+
 #game-view .game-view__bar-container {
   display: flex;
   justify-content: center;
@@ -50,8 +76,6 @@ body {
 #game-view .game-view__bar {
   display: flex;
   align-items: center;
-  max-width: 180px;
-  flex-grow: 1;
   gap: 0.5rem;
   padding: 0.5rem;
   border-radius: 0.2rem;
@@ -66,6 +90,7 @@ body {
   display: inline-block;
   background-color: red;
 }
+
 #game-view .bar__score::after {
   content: '';
   margin: 0 0.2rem;
@@ -80,6 +105,7 @@ body {
 }
 
 #game-view .game-view__canvas-container {
+  position: relative;
   display: flex;
   justify-content: center;
 }
@@ -87,6 +113,20 @@ body {
 #canvas {
   outline: none;
 }
+
+/* ------- */
+
+.settings-btn {
+  background-color: transparent;
+  background-image: url("../images/gear.svg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+}
+
 /* ------- */
 
 .dialog {
@@ -121,4 +161,71 @@ body {
   display: flex;
   justify-content: right;
   gap: 1rem;
+}
+
+
+#settings-dialog.settings-dialog--hidden {
+  display: none;
+}
+
+#settings-dialog .settings-dialog__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* ------- */
+#screen-controls {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  display: flex;
+}
+
+#screen-controls .screen-controls__arrows-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 5%;
+  row-gap: 0.5rem;
+  column-gap: 3.5rem;
+  display: grid;
+  justify-items: center;
+  grid-template-areas:
+    "up up"
+    "left right"
+    "down down";
+}
+
+#screen-controls [data-direction] {
+  width: 0;
+  height: 0;
+  border-bottom: 3rem solid rgba(0, 0, 0, 0.5);
+  border-left: 1.5rem solid transparent;
+  border-right: 1.5rem solid transparent;
+}
+
+#screen-controls [data-direction].screen-controls__arrow--pressed {
+  width: 0;
+  height: 0;
+  border-bottom-color:rgba(255, 0, 0, 0.5);
+}
+
+#screen-controls [data-direction="up"] {
+  grid-area: up;
+}
+
+#screen-controls [data-direction="right"] {
+  grid-area: right;
+  transform: rotate(90deg);
+}
+
+#screen-controls [data-direction="down"] {
+  grid-area: down;
+  transform: rotate(180deg);
+}
+
+#screen-controls [data-direction="left"] {
+  grid-area: left;
+  transform: rotate(270deg);
 }

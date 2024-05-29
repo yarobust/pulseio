@@ -25,7 +25,7 @@ export function RoomList({connectToRoom}) {
         roomElm.id = room.id
         roomElm.classList.add('room');
         const descriptionElm = document.createElement('span');
-        descriptionElm.textContent = `name: ${room.id.slice(0, 8)}|players: ${room.playerNumber}/${room.playerLimit}`;
+        descriptionElm.textContent = `${room.name.slice(0, 20).padEnd(20, ' ')}|${room.playerNumber}/${room.playerLimit}`;
         const buttonElm = document.createElement('button');
         buttonElm.classList.add('room-list__play-button')
         buttonElm.textContent = 'Play';
