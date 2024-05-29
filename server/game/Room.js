@@ -17,8 +17,8 @@ export class Room {
     this._gameTimeLimit = 1135000; //ms
     /** @type {Game} */
     this._game = new Game(this._playersLimit);
-    this._tickLengthMs = 1000 / 20;
-    this._gameLoopTimeoutId;
+    this.sendUpdateRate = 1000 / 20;
+    this._sendUpdateIntervalId;
   } 
   /** @param {import('socket.io').Socket} socket  */
   handlePlayerConnection(socket) {
@@ -57,42 +57,33 @@ export class Room {
   }
 
   startGame() {
-    clearTimeout(this._gameLoopTimeoutId);
-    // possible questions???
+    clearInterval(this._sendUpdateIntervalId);
+    
+    this._game.start();
+
     this._startTime = performance.now();
     let previousTime = this._startTime;
-    let remainder = 0;
-    const gameLoop = () => {
-      const currentTime = performance.now();
-      const deltaTime = currentTime - previousTime;
-      // |____1000____|15|____2000____|30|
-      if (deltaTime + remainder > this._tickLengthMs) {
-        previousTime = currentTime;
-        remainder = (deltaTime + remainder) % this._tickLengthMs;
-        
-        //winning condition 
-        if(this._game.handleGoal()) {
-          if (Math.max(...this._game.score) >= this._winningScore) {
-            this.restartGame();
-            return;
-          } else {
-            const data = this._game.resetRound();
-            this._ioServer.to(this._id).emit('game:restart', data);
-          }
-        } 
-        if (currentTime - this._startTime> this._gameTimeLimit) {
+    this._sendUpdateIntervalId = setInterval(() => {
+      this._ioServer.to(this._id).emit('game:update', this._game.gameState);
+      
+       //winning condition 
+      if(this._game.isGoal) {
+        if (Math.max(...this._game.score) >= this._winningScore) {
+          this._game.stop();
+          clearInterval(this._sendUpdateIntervalId);
           this.restartGame();
-          return;
+        } else {
+          const data =  this._game.resetRound();
+          this._ioServer.to(this._id).emit('game:restart', data);
         }
-
-         //game update
-        const gameStateData = this._game.updateGameState(this._tickLengthMs);
-        this._ioServer.to(this._id).emit('game:update', gameStateData);
-
-      } 
-      this._gameLoopTimeoutId = setTimeout(gameLoop, 0);
-    };
-    gameLoop();
+      }
+      const currentTime = performance.now();
+      if (currentTime - this._startTime> this._gameTimeLimit) {
+        this._game.stop();
+        clearInterval(this._sendUpdateIntervalId);
+        this.restartGame();
+      }      
+    }, this.sendUpdateRate);
   }
   restartGame(){
     const timeout = 6000;

@@ -12,7 +12,7 @@ export class App {
     this._socket = null;
     this._game = null;
     // for debug purposes
-    this._randomLatencygMs = 0 || Math.random() * 100 + 200;
+    this._randomLatencygMs = 1 || Math.random() * 100 + 200;
     this._gameTimer = 0;
     this._gameTimerId = 0;
   }

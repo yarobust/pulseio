@@ -13,7 +13,7 @@ export class Game {
     this._width = 990 * 1;
     this._height = 510 * 1;
     this._score = [0, 0];
-    this.isGoal = false;
+    this._isGoal = false;
     this._gameState = {
 
     };
@@ -39,7 +39,7 @@ export class Game {
     this._rightSpawnPoints = [];
 
     this._gameLoopTimeoutId;
-    this._tickLengthMs = 1000 / 20;
+    this._tickRate = 1000 / 60;
     this._startTime = 0;
 
     //should go before buildStadium
@@ -130,10 +130,7 @@ export class Game {
     this._players.find((player) => player._id === playerId).controls = direction;
   }
 
-  /** @return {GameStateData} */
   updateGameState(deltaTime) {
-
-
     // console.log('game state update')
     this._players.forEach((player) => {
       player.move(deltaTime);
@@ -172,7 +169,7 @@ export class Game {
 
     this.handleGoal();
 
-    return {
+    this._gameState = {
       players: this._players.map((player) => player.getData()),
       ball: this._ball.getData(),
     }
@@ -189,9 +186,35 @@ export class Game {
     return false;
   }
 
+  start(){
+    clearTimeout(this._gameLoopTimeoutId);
+    // possible questions???
+    this._startTime = performance.now();
+    let previousTime = this._startTime;
+    let remainder = 0;
+    const gameLoop = () => {
+      const currentTime = performance.now();
+      const deltaTime = currentTime - previousTime;
+      // |____1000____|15|____2000____|30|
+      if (deltaTime + remainder > this._tickRate) {
+        previousTime = currentTime;
+        remainder = (deltaTime + remainder) % this._tickRate;
+         //game update
+        this.updateGameState(this._tickRate);
+      } 
+      this._gameLoopTimeoutId = setTimeout(gameLoop, 0);
+    };
+    gameLoop();
+  }
+
+  stop() {
+    clearTimeout(this._gameLoopTimeoutId);
+  }
+  
   /** @returns {RestartGameData} */
   resetRound() {
     this._ball.reset(this._width / 2, this._height / 2);
+    this._isGoal = false;
     
     let lNum = 0;
     let rNum = 0;
@@ -218,34 +241,10 @@ export class Game {
     }
   }
 
-  start(){
-    clearTimeout(this._gameLoopTimeoutId);
-    // possible questions???
-    this._startTime = performance.now();
-    let previousTime = this._startTime;
-    let remainder = 0;
-    const gameLoop = () => {
-      const currentTime = performance.now();
-      const deltaTime = currentTime - previousTime;
-      // |____1000____|15|____2000____|30|
-      if (deltaTime + remainder > this._tickLengthMs) {
-        previousTime = currentTime;
-        remainder = (deltaTime + remainder) % this._tickLengthMs;
-         //game update
-        this.updateGameState(this._tickLengthMs);
-      } 
-      this._gameLoopTimeoutId = setTimeout(gameLoop, 0);
-    };
-    gameLoop();
-  }
-
-  stop() {
-    
-  }
-
   /** @returns {RestartGameData} */
   reset() {
     this._score = [0, 0];
+    this._isGoal = false;
     this._ball.reset(this._width / 2, this._height / 2);
     // restart players position
 
@@ -436,5 +435,13 @@ export class Game {
       },
       score: this.score
     }
+  }
+
+  get gameState(){
+    return this._gameState;
+  }
+
+  get isGoal() {
+    return this._isGoal;
   }
 }
