@@ -1,3 +1,5 @@
+type Controls = boolean[]
+
 interface CircleConstructorData {
   x: number,
   y: number,
@@ -9,16 +11,15 @@ interface CircleConstructorData {
 
 interface PlayerConstructorData extends CircleConstructorData {
   id: string,
-  actionStrokeStyle?: string,
-  command: string
+  name: string,
+  actionStyle?: string,
+  controls?: Controls,
 }
 
 interface BallConstructorData extends CircleConstructorData {
 }
 
-type Controls = boolean[]
-
-interface CircleData {
+interface CircleInitData {
   x: number,
   y: number,
   r: number,
@@ -31,17 +32,30 @@ interface CircleData {
   fillStyle?: string,
 }
 
-interface BallData extends CircleData {
+interface BallInitData extends CircleInitData {}
 
-}
-
-interface PlayerData extends CircleData {
+interface PlayerInitData extends CircleInitData {
   id: string,
+  name: string,
   controls?: Controls,
-  actionStrokeStyle?: string
+  actionStyle?: string
 }
 
-interface LineData {
+interface CircleStateData {
+  x: number,
+  y: number,
+  xVelocity: number,
+  yVelocity: number,
+}
+
+interface BallStateData extends CircleStateData {}
+
+interface PlayerStateData extends CircleStateData {
+  id: string,
+  controls: Controls,
+}
+
+interface LineInitData {
   x0: number,
   y0: number,
   x1: number,
@@ -50,35 +64,35 @@ interface LineData {
   lineWidth?: number,
 }
 
-interface WallData extends LineData {
+interface WallInitData extends LineInitData {
   type?: 'normal' | 'bouncy' | 'goal-line',
 }
 
 interface StadiumData {
-  walls: WallData[],
-  lines: LineData[],
-  circles: CircleData[],
+  color?: string,
+  walls: WallInitData[],
+  lines: LineInitData[],
+  circles: CircleInitData[],
 }
 
 interface GameInitData {
   width: number,
   height: number,
-  players: PlayerData[],
-  ball: BallData,
+  players: PlayerInitData[],
+  ball: BallInitData,
   stadium: StadiumData,
   score: number[],
   timeLeft?: number //ms
 }
 
 interface GameStateData {
-  players: PlayerData[]
-  ball: BallData
+  players: PlayerStateData[]
+  ball: BallStateData
 }
 
-
-
-interface RestartGameData {
+interface GameRestartData {
   score: number[],
-  players: PlayerData[],
-  ball: BallData
+  timeLeft?: number, // ms
+  players: PlayerInitData[],
+  ball: BallInitData,
 }

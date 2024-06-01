@@ -43,14 +43,14 @@ button {
 /* --------------- */
 
 #game-view,
-#room-list {
+#room-list,
+#name-prompt {
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
   padding: 0 2rem;
 }
-
 
 #game-view .game-view__container {
   width: 100%;
@@ -229,3 +229,18 @@ button {
   grid-area: left;
   transform: rotate(270deg);
 }
+
+/* ------- */
+
+#name-prompt .name-prompt__container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  flex-direction: column;
+  max-width: 300px;
+  outline: 1px solid black;
+  background-color: white;
+  border-radius: 0.5rem;
+}
+
+

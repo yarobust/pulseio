@@ -1,5 +1,5 @@
 export class Line {
-  /** @param {LineData} data  */
+  /** @param {LineInitData} data  */
   constructor(data) {
     this._x0 = data.x0;
     this._y0 = data.y0;
@@ -10,7 +10,7 @@ export class Line {
   }
 
 
-  getData() {
+  initData() {
     return {
       x0: this._x0,
       y0: this._y0,

@@ -2,7 +2,7 @@ const ACCELERATION = 0.000275; //px/ms
 const FRICTION = 0.001;
 
 export class Circle {
-  /** @param {import('../../../types').CircleData} data  */
+  /** @param {import('../../../types').CircleInitData} data  */
   constructor(data) {
     this._x = data.x;
     this._y = data.y;
@@ -14,7 +14,15 @@ export class Circle {
 
     this._lineWidth = data.lineWidth || 1;
     this._strokeStyle = data.strokeStyle || 'black';
+    // purposly can be set to null to avoid drawing fill
     this._fillStyle = data.fillStyle;
+  }
+
+  reset(data){
+    this._x = data.x;
+    this._y = data.y;
+    this._xVelocity = data.xVelocity;
+    this._yVelocity = data.yVelocity;
   }
 
   /** @param {CanvasRenderingContext2D} ctx */

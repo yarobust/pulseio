@@ -6,6 +6,12 @@ import { Wall } from './line/Wall.js';
 
 const PLAYER_RADIUS = 20 * 1;
 const BALL_RADIUS = 10 * 1;
+const LEFT_TEAM_COLOR = '#eb8b78';
+const RIGHT_TEAM_COLOR = '#7891eb';
+const LEFT_TEAM_ACTION_COLOR = 'red';
+const RIGHT_TEAM_ACTION_COLOR = 'blue';
+const STADIUM_COLOR = '#e4f5e4';
+const BALL_COLOR = 'aqua';
 
 export class Game {
   constructor(playersLimit) {
@@ -14,17 +20,19 @@ export class Game {
     this._height = 510 * 1;
     this._score = [0, 0];
     this._isGoal = false;
-    this._gameState = {
-
-    };
+    this._gameState = {};
     /** @type {Player[]} */
     this._players = [];
+    /** @type {Player[]} */
+    this._leftTeam = [];
+    /** @type {Player[]} */
+    this._rightTeam = [];
     /** @type {Ball} */
     this._ball = new Ball({
       x: this._width / 2,
       y: this._height / 2,
       r: BALL_RADIUS,
-      fillStyle: 'aqua'
+      fillStyle: BALL_COLOR
     })
     this._stadium = {
       /** @type {Wall[]} */
@@ -39,97 +47,101 @@ export class Game {
     this._rightSpawnPoints = [];
 
     this._gameLoopTimeoutId;
-    this._tickRate = 1000 / 60;
-    this._startTime = 0;
+    this._tickRate = 1000 / 120;
 
-    //should go before buildStadium
+    //createSpawnPoints should go before buildStadium
     this.createSpawnPoints();
     this.buildStadium();
   }
   /** 
    * @param {String} playerId 
-   */
-  addPlayer(playerId) {
-    let x, y, fillStyle, command;
-    if (!this._players.length) {
-      command = 'l';
-      fillStyle = 'red';
-      [x, y] = this._leftSpawnPoints[0];
-    } else { 
-      const spawnNum = Math.floor(this._players.length/2)
-      if (this._players[this._players.length-1].command === 'l') {
-        command = 'r';
-        fillStyle = 'blue';
-        [x, y] = this._rightSpawnPoints[spawnNum];
-      } else {
-        command = 'l';
-        fillStyle = 'red';
-        [x, y] = this._leftSpawnPoints[spawnNum];
-      }
+   * @returns {PlayerInitData}
+   * */
+  addPlayer(playerId, name) {
+    let x, y, fillStyle, actionStyle;
+    //first player is always in left team
+    if (this._leftTeam.length > this._rightTeam.length) {
+      fillStyle = RIGHT_TEAM_COLOR;
+      actionStyle = RIGHT_TEAM_ACTION_COLOR;
+      [x, y] = this._rightSpawnPoints[this._rightTeam.length];
+    } else {
+      fillStyle = LEFT_TEAM_COLOR;
+      actionStyle = LEFT_TEAM_ACTION_COLOR;
+      [x, y] = this._leftSpawnPoints[this._leftTeam.length];
     }
 
-    this._players.push(new Player({
+    const newPlayer = new Player({
       id: playerId,
+      name,
       x,
       y,
       r: PLAYER_RADIUS,
-      lineWidth: 3,
+      lineWidth: Math.round(PLAYER_RADIUS / 10),
       fillStyle,
-      command
-    }));
+      actionStyle,
+    });
+
+    if (this._leftTeam.length > this._rightTeam.length) {
+      this._rightTeam.push(newPlayer);
+    } else {
+      this._leftTeam.push(newPlayer);
+    }
+
+    this._players.push(newPlayer);
+    return newPlayer.initData();
   }
   /** 
    * @param {String} playerId
-   */ 
-  removePlayer(playerId) { 
-    let playersDifference = 0;
-    let removedPlayerCommand = '';
-    let rearrangedTarget = null; 
-    //should move the first player of the team!!!
-    
-    for (let player of this._players) {
-      if (player.id === playerId) {
-        removedPlayerCommand = player.command;
-        continue;
-      }
-      if (player.command === 'l') {
-        playersDifference++;
-      } else {
-        playersDifference--;
+   * @returns {PlayerInitData}changed player
+   */
+  removePlayer(playerId) {
+    /** @type {Player | null} */
+    let reorderedPlayer = null;
+    let x, y, fillStyle, actionStyle;
+
+    //remove player from team
+    for (let i = 0; i < this._players.length / 2; i++) {
+      if (this._leftTeam[i].id === playerId) {
+        this._leftTeam.splice(i, 1);
+        break;
+      } else if (this._rightTeam[i].id === playerId) {
+        this._rightTeam.splice(i, 1);
+        break;
       }
     }
 
-    const rearangedPlayers = [];
-    for(let player of this._players) {
-      if (player.id === playerId) {
-        continue;
-      }
-      if(Math.abs(playersDifference) > 1 && !rearrangedTarget && player.command !== removedPlayerCommand) {
-        const spawnNum = Math.floor(this._playersLimit/2 * Math.random())
-        let x, y, fillStyle, command;
-        if(removedPlayerCommand === 'l') {
-          command = 'l';
-          fillStyle = 'red';
-          [x,y] = this._leftSpawnPoints[spawnNum];
-        } else {
-          command = 'r';
-          fillStyle = 'blue';
-          [x,y] = this._rightSpawnPoints[spawnNum];
-        }
-        player.reset({x,y,command,fillStyle})
-        rearrangedTarget = player;
-        continue;
-      }
-      rearangedPlayers.push(player);
+    //reorder teams 
+    //think about changing radius of team to be proportional to the opposite radius team
+    if (this._leftTeam.length - 1 > this._rightTeam.length) {
+      reorderedPlayer = this._leftTeam.pop();
+      this._rightTeam.push(reorderedPlayer);
+      [x, y] = this._rightSpawnPoints[this._rightTeam.length - 1];
+      fillStyle = RIGHT_TEAM_COLOR;
+      actionStyle = RIGHT_TEAM_ACTION_COLOR;
+    } else if (this._leftTeam.length < this._rightTeam.length - 1) {
+      reorderedPlayer = this._rightTeam.pop();
+      this._leftTeam.push(reorderedPlayer);
+      [x, y] = this._leftSpawnPoints[this._leftTeam.length - 1];
+      fillStyle = LEFT_TEAM_COLOR;
+      actionStyle = LEFT_TEAM_ACTION_COLOR;
     }
-    rearrangedTarget && rearangedPlayers.push(rearrangedTarget);
-    this._players = rearangedPlayers;
+
+    this._players = this._players.filter((player) => {
+      return player.id !== playerId;
+    });
+
+    if (reorderedPlayer) {
+      reorderedPlayer.reset({ x, y, fillStyle, actionStyle });
+      return reorderedPlayer.initData();
+    }
+    return null;
   }
 
-  updatePlayerDirection(playerId, direction) {
-    this._players.find((player) => player._id === playerId).controls = direction;
+  updatePlayerControls(playerId, controls) {
+    this._players.find((player) => player._id === playerId).controls = controls;
   }
 
+  /** @param {number} deltaTime  */
   updateGameState(deltaTime) {
     // console.log('game state update')
     this._players.forEach((player) => {
@@ -167,31 +179,29 @@ export class Game {
       }
     })
 
-    !this._isGoal && this.handleGoal();
+    !this._isGoal && this.checkGoal();
 
     this._gameState = {
-      players: this._players.map((player) => player.getData()),
-      ball: this._ball.getData(),
+      players: this._players.map((player) => player.stateData()),
+      ball: this._ball.stateData(),
     }
   }
 
-  handleGoal() {
-    if (this._ball.x < 0 - this._ball.r) {
+  checkGoal() {
+    if (this._ball.x <= 0 - this._ball.r) {
       this._score[1]++;
       this._isGoal = true;
-    } else if (this._ball.x > this._width + this._ball.r) {
+    } else if (this._ball.x >= this._width + this._ball.r) {
       this._score[0]++;
       this._isGoal = true;
     }
-
     return false;
   }
 
-  start(){
+  start() {
     clearTimeout(this._gameLoopTimeoutId);
     // possible questions???
-    this._startTime = performance.now();
-    let previousTime = this._startTime;
+    let previousTime = performance.now();
     let remainder = 0;
     const gameLoop = () => {
       const currentTime = performance.now();
@@ -200,9 +210,9 @@ export class Game {
       if (deltaTime + remainder > this._tickRate) {
         previousTime = currentTime;
         remainder = (deltaTime + remainder) % this._tickRate;
-         //game update
+        //game update
         this.updateGameState(this._tickRate);
-      } 
+      }
       this._gameLoopTimeoutId = setTimeout(gameLoop, 0);
     };
     gameLoop();
@@ -211,65 +221,59 @@ export class Game {
   stop() {
     clearTimeout(this._gameLoopTimeoutId);
   }
-  
-  /** @returns {RestartGameData} */
-  resetRound() {
+
+  /** @returns {GameRestartData} */
+  resetRound() { /////////change
     this._ball.reset(this._width / 2, this._height / 2);
     this._isGoal = false;
-    
-    let lNum = 0;
-    let rNum = 0;
-    this._players.forEach((player) => {
-      let x, y, fillStyle, command;
-        if(player.command === 'l') {
-          command = 'l';
-          fillStyle = 'red';
-          [x,y] = this._leftSpawnPoints[lNum];
-          lNum++;
-        } else {
-          command = 'r';
-          fillStyle = 'blue';
-          [x,y] = this._rightSpawnPoints[rNum];
-          rNum++;
-        }
-        player.reset({x,y,command,fillStyle});
-    })
-    
+
+    //remove player from team
+    for (let i = 0; i < this._leftTeam.length; i++) {
+      let [x, y] = this._leftSpawnPoints[i];
+      this._leftTeam[i].reset({ x, y });
+    }
+    for (let i = 0; i < this._rightTeam.length; i++) {
+      let [x, y] = this._rightSpawnPoints[i];
+      this._rightTeam[i].reset({ x, y });
+    }
+
     return {
       score: this._score,
-      ball: this._ball.getData(),
-      players: this._players.map((player) => player.getData()),
+      ball: this._ball.initData(),
+      players: this._players.map((player) => player.initData()),
     }
   }
 
-  /** @returns {RestartGameData} */
-  reset() {
+  /** @returns {GameRestartData} */
+  restart() { //////////////////////change 
     this._score = [0, 0];
     this._isGoal = false;
     this._ball.reset(this._width / 2, this._height / 2);
     // restart players position
 
+    this._leftTeam = [];
+    this._rightTeam = [];
     const randomOffset = Math.floor(Math.random() * this._players.length);
-    this._players.forEach((player, i) => {
+    for (let i = 0; i < this._players.length; i++) {
       const newI = (i + randomOffset) % this._players.length;
-      const spawnNum = Math.floor( newI / 2);
-      let x, y, fillStyle, command;
-        if(newI % 2 === 1) {
-          command = 'l';
-          fillStyle = 'red';
-          [x,y] = this._leftSpawnPoints[spawnNum];
-        } else {
-          command = 'r';
-          fillStyle = 'blue';
-          [x,y] = this._rightSpawnPoints[spawnNum];
-        }
-        player.reset({x,y,command,fillStyle});
-    })
-
+      let x, y, fillStyle, actionStyle;
+      if (newI % 2 === 1) {
+        fillStyle = RIGHT_TEAM_COLOR;
+        actionStyle = RIGHT_TEAM_ACTION_COLOR;
+        [x, y] = this._rightSpawnPoints[Math.floor(newI / 2)];
+        this._rightTeam.push(this._players[i]);
+      } else {
+        fillStyle = LEFT_TEAM_COLOR;
+        actionStyle = LEFT_TEAM_ACTION_COLOR;
+        [x, y] = this._leftSpawnPoints[Math.floor(newI / 2)];
+        this._leftTeam.push(this._players[i]);
+      }
+      this._players[i].reset({ x, y, fillStyle, actionStyle });
+    }
     return {
       score: this._score,
-      ball: this._ball.getData(),
-      players: this._players.map((player) => player.getData()),
+      ball: this._ball.initData(),
+      players: this._players.map((player) => player.initData()),
     }
   }
 
@@ -283,7 +287,7 @@ export class Game {
       y: this._height / 2,
     }
     const rightCentre = {
-      x: 3 * this._width / 4, 
+      x: 3 * this._width / 4,
       y: this._height / 2,
     }
     for (let i = 0; i <= (this._playersLimit / 2) - 1; i++) {
@@ -304,6 +308,7 @@ export class Game {
     const goalLineY1 = goalLineY0 + goalLineSize;
     const lineWidth = Math.round(BALL_RADIUS / 10);
 
+    //rectangle
     this._stadium.walls.push(new Wall({
       x0: 0,
       y0: goalLineY0,
@@ -329,7 +334,7 @@ export class Game {
       y1: goalLineY1,
       type: 'goal-line',
       color: 'blue',
-      lineWidth,
+      lineWidth: lineWidth * 2,
     }), new Wall({
       x0: this._width,
       y0: goalLineY1,
@@ -355,9 +360,37 @@ export class Game {
       y1: goalLineY0,
       type: 'goal-line',
       color: 'red',
-      lineWidth: 3,
+      lineWidth: lineWidth * 2,
     }),
-    )
+    );
+
+    //corners
+    this._stadium.walls.push(new Wall({
+      x0: 0,
+      y0: PLAYER_RADIUS * 2,
+      x1: PLAYER_RADIUS * 2,
+      y1: 0,
+      lineWidth
+    }), new Wall({
+      x0: this._width - PLAYER_RADIUS * 2,
+      y0: 0,
+      x1: this._width,
+      y1: PLAYER_RADIUS * 2,
+      lineWidth
+    }), new Wall({
+      x0: this._width,
+      y0: this._height - PLAYER_RADIUS * 2,
+      x1: this._width - PLAYER_RADIUS * 2,
+      y1: this._height,
+      lineWidth,
+    }), new Wall({
+      x0: PLAYER_RADIUS * 2,
+      y0: this._height,
+      x1: 0,
+      y1: this._height - PLAYER_RADIUS * 2,
+      lineWidth,
+    })
+    );
 
     //centre line
     this._stadium.lines.push(new Line({
@@ -427,18 +460,19 @@ export class Game {
     return {
       width: this._width,
       height: this._height,
-      players: this._players.map((player) => player.getData()),
-      ball: this._ball.getData(),
+      players: this._players.map((player) => player.initData()),
+      ball: this._ball.initData(),
       stadium: {
-        walls: this._stadium.walls.map((wall) => wall.getData()),
-        lines: this._stadium.lines.map((line) => line.getData()),
-        circles: this._stadium.circles.map((circle) => circle.getData())
+        color: STADIUM_COLOR,
+        walls: this._stadium.walls.map((wall) => wall.initData()),
+        lines: this._stadium.lines.map((line) => line.initData()),
+        circles: this._stadium.circles.map((circle) => circle.initData())
       },
       score: this.score
     }
   }
 
-  get gameState(){
+  get gameState() {
     return this._gameState;
   }
 

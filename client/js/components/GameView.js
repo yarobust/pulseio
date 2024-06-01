@@ -5,11 +5,11 @@ const settingsItems = [{
   id: 'settings-screen-controls',
   name: 'screenControls',
   text: 'Screen controls'
-},{
+},/*{
   id: 'audio',
   name: 'audio',
   text: 'Allow audio'
-}];
+}*/];
 
 export function GameView({handleExit}) {
   const gameViewElm = document.createElement('div');

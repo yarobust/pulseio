@@ -1,20 +1,19 @@
 import { Circle } from './Circle.js';
+import { Ball } from './Ball.js';
 
 export class Player extends Circle {
   /** @param {PlayerConstructorData} data  */
   constructor(data) {
-    const {id, actionStrokeStyle, command, ...restData} = data;
+    const { id, actionStyle, name, ...restData } = data;
     super(data);
     this._id = id;
-    this._command = command;
+    this._name = name;
     this._controls = Array(5).map(() => false);
-    this._actionStrokeStyle = actionStrokeStyle || 'red';
+    this._actionStyle = actionStyle || 'yellow';
   }
 
   move(deltaTime) {
     const deltaAcceleration = this._acceleration * deltaTime;
-    const deltaFriction = this._friction * deltaTime;
-
     if (this._controls[0]) {
       this._yVelocity -= deltaAcceleration;
     }
@@ -27,85 +26,57 @@ export class Player extends Circle {
     if (this._controls[3]) {
       this._xVelocity -= deltaAcceleration;
     }
-
-    if (Math.abs(this._xVelocity) < deltaAcceleration) {
-      this._xVelocity = 0;
-    } else {
-      this._xVelocity *= 1 - deltaFriction;
-    }
-    if (Math.abs(this._yVelocity) < deltaAcceleration) {
-      this._yVelocity = 0;
-    } else {
-      this._yVelocity *= 1 - deltaFriction;
-    }
-
-    this._x += this._xVelocity * deltaTime;
-    this._y += this._yVelocity * deltaTime;
+    super.move(deltaTime);
   }
 
-    /** @param {Circle} circle*/
-    checkCircleCollision(circle) {
-      return ((this._x - circle.x) ** 2 + (this._y - circle.y) ** 2) < ((this._r + circle.r) ** 2);
+/** @param {Circle} circle */
+  resolveCircleCollision(circle){
+    super.resolveCircleCollision(circle);
+    if (this._controls[4] && circle instanceof Ball) {
+     //make ball bounce off player
+      const dx = this._x - circle.x;
+      const dy = this._y - circle.y;
+      const angle = Math.atan2(dy, dx);
+      circle.xVelocity = -Math.cos(angle) * circle._acceleration * 1500;
+      circle.yVelocity = -Math.sin(angle) * circle._acceleration * 1500;
+      // console.log(circle.xVelocity, circle.yVelocity);
+      this._controls[4] = false;
     }
-    //dynamic collision methods response for circles
-    /** @param {Circle} circle */
-    resolveCircleCollision(circle) {
-      let distance = Math.sqrt((this._x - circle.x) ** 2 + (this._y - circle.y) ** 2);
-      if (distance === 0) {
-        return;
-      }
-      const overlap = (this._r + circle.r) - distance;
-      const collisionNormal = {
-        x: (circle.x - this._x) / distance,
-        y: (circle.y - this._y) / distance,
-      };
-      this._x -= overlap * collisionNormal.x;
-      this._y -= overlap * collisionNormal.y;
-      circle.x += overlap * collisionNormal.x;
-      circle.y += overlap * collisionNormal.y;
-  
-      const relativeVelocity = {
-        x: this._xVelocity - circle.xVelocity,
-        y: this._yVelocity - circle.yVelocity,
-      };
-      const speed = relativeVelocity.x * collisionNormal.x + relativeVelocity.y * collisionNormal.y;
-      if (speed < 0) {
-        return;
-      }
-      const impulse = 2 * speed / (this._r + circle.r);
-      this._xVelocity -= impulse * circle.r * collisionNormal.x;
-      this._yVelocity -= impulse * circle.r * collisionNormal.y;
-      circle.xVelocity += impulse * this._r * collisionNormal.x * (this._controls[4] ? 2 : 1);
-      circle.yVelocity += impulse * this._r * collisionNormal.y * (this._controls[4] ? 2 : 1);
-    }
+  }
 
   /** @param {Controls} arr  */
   set controls(arr) {
     this._controls = arr;
   }
-  get id (){
+  get id() {
     return this._id;
   }
-  get controls(){
+  get controls() {
     return [...this._controls];
   }
 
-  get command(){
-    return this._command;
-  }
-  reset(data){
-    super.reset(data.x, data.y);
-    this._command = data.command;
-    this._fillStyle = data.fillStyle;
+  reset(data) {
+    super.reset(data.x, data.y, data.fillStyle);
+    this._actionStyle = data.actionStyle || this._actionStyle;
     this._controls = Array(5).map(() => false);
   }
- /** @returns {PlayerData} */
-  getData(){
-    return  {
+  /** @returns {PlayerInitData} */
+  initData() {
+    return {
+      id: this._id,
+      name: this._name,
+      controls: [...this._controls],
+      actionStyle: this._actionStyle,
+      ...super.initData()
+    };
+  }
+
+  /** @returns {PlayerStateData} */
+  stateData() {
+    return {
       id: this._id,
       controls: [...this._controls],
-      actionStrokeStyle: this._actionStrokeStyle,
-      ...super.getData()
-    };
+      ...super.stateData()
+    }
   }
 }

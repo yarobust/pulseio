@@ -27,10 +27,11 @@ app.get('/rooms', (req, res) => {
   res.json(rooms);
 })
 
-const roomList = [new Room({ioServer, roomName: 'some cool name'}), new Room({ioServer, roomName: 'royale battle'})];
+const roomList = [new Room({ioServer, roomName: 'unnamed'}), new Room({ioServer, roomName: 'royale battle'})];
 roomList[0].startGame();
-roomList[1].startGame();
-// roomList[1].startGame();
+roomList.forEach((room) => {
+  room.startGame();
+});
 
 //todo: make some auth
 ioServer.use((socket, next) => {
@@ -42,11 +43,11 @@ ioServer.on('connection', (socket) => {
   console.log('new connection');
   const {roomId, name} = socket.handshake.query;
   const roomToConnect = roomList.find((room) => room.id === roomId);
-  if (!roomToConnect) {
+  if (!roomToConnect || typeof name !== 'string') {
     socket.disconnect(true);
     return;
   }
-  roomToConnect.handlePlayerConnection(socket)
+  roomToConnect.handlePlayerConnection(socket, name.slice(0, 10));
 })
 
 server.listen(3000, () => {

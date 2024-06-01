@@ -3,7 +3,7 @@ import {App} from './app.js'
 const app = new App(document.getElementById('app'));
 
 const startApp = () => {
-  app.showRoomList();
+  app.showNamePrompt();
 }
 
 window.addEventListener('load', startApp);

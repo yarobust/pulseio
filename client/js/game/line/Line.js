@@ -1,5 +1,5 @@
 export class Line {
-  /** @param {import('../../../types').LineData} data  */
+  /** @param {import('../../../types').LineInitData} data  */
   constructor(data) {
     this._x0 = data.x0;
     this._y0 = data.y0;
@@ -19,16 +19,6 @@ export class Line {
     ctx.stroke();
   }
   
-  getData() {
-    return {
-      x0: this._x0,
-      y0: this._y0,
-      x1: this._x1,
-      y1: this._y1,
-      color: this._color,
-      lineWidth: this._lineWidth,
-    }
-  }
   get x0() {
     return this._x0;
   }

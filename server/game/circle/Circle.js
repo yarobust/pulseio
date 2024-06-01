@@ -16,6 +16,7 @@ export class Circle {
     this._fillStyle = data.fillStyle;
   }
 
+  /** @param {number} deltaTime  */
   move(deltaTime) {
     const deltaAcceleration = this._acceleration * deltaTime;
     const deltaFriction = this._friction * deltaTime;
@@ -31,38 +32,62 @@ export class Circle {
       this._yVelocity *= 1 - deltaFriction;
     }
 
+    // if (Math.abs(this._xVelocity) > this._r / deltaTime) {
+    //   this._xVelocity = this._r / deltaTime * Math.sign(this._xVelocity);
+    // }
+    // if (Math.abs(this._yVelocity) > this._r / deltaTime) {
+    //   this._yVelocity = this._r / deltaTime * Math.sign(this._yVelocity);
+    // } 
+
     this._x += this._xVelocity * deltaTime;
     this._y += this._yVelocity * deltaTime;
   }
 
-  reset(x, y){
+  /** 
+   * @param {number} x 
+   * @param {number} y
+  */
+  reset(x, y, fillStyle = null) {
     this._x = x;
     this._y = y;
     this._xVelocity = 0;
     this._yVelocity = 0;
+    this._fillStyle = fillStyle || this._fillStyle;
   }
-
+  /** @param {import('../line/Wall.js').Wall} wall  */
   checkWallCollision(wall) {
     const dx = wall.x1 - wall.x0;
     const dy = wall.y1 - wall.y0;
     const l2 = dx * dx + dy * dy;
+    if (l2 === 0) {
+      return false;
+    }
     const t = Math.max(0, Math.min(1, ((this._x - wall.x0) * dx + (this._y - wall.y0) * dy) / l2));
     const projectionX = wall.x0 + t * dx;
     const projectionY = wall.y0 + t * dy;
     const distance = Math.sqrt((this._x - projectionX) ** 2 + (this._y - projectionY) ** 2);
     return distance < this._r;
+
+    //optimization: return calculation and then use it in resolveWallCollision
   }
 
-  //velocity reflection from wall
+  /** @param {import('../line/Wall.js').Wall} wall  */
   resolveWallCollision(wall) {
     const dx = wall.x1 - wall.x0;
     const dy = wall.y1 - wall.y0;
     const l2 = dx * dx + dy * dy;
+    if (l2 === 0) {
+      return;
+    }
+    //the point on the wall line closest to the circle.[]
+    // t - magnitude of unit vector
     const t = Math.max(0, Math.min(1, ((this._x - wall.x0) * dx + (this._y - wall.y0) * dy) / l2));
     const projectionX = wall.x0 + t * dx;
     const projectionY = wall.y0 + t * dy;
     const distance = Math.sqrt((this._x - projectionX) ** 2 + (this._y - projectionY) ** 2);
     const overlap = this._r - distance;
+
+    //unit vector pointing from the closest point on the wall to the circle's center.
     const collisionNormal = {
       x: (this._x - projectionX) / distance,
       y: (this._y - projectionY) / distance,
@@ -70,12 +95,49 @@ export class Circle {
     this._x += overlap * collisionNormal.x;
     this._y += overlap * collisionNormal.y;
     const dotProduct = this._xVelocity * collisionNormal.x + this._yVelocity * collisionNormal.y;
-    this._xVelocity -= 2 * dotProduct * collisionNormal.x;
-    this._yVelocity -= 2 * dotProduct * collisionNormal.y;
+    this._xVelocity -= 1.99 * dotProduct * collisionNormal.x;
+    this._yVelocity -= 1.99 * dotProduct * collisionNormal.y;
   }
 
-  /** @returns {CircleData} */
-  getData() {
+
+  /** @param {Circle} circle*/
+  checkCircleCollision(circle) {
+    return ((this._x - circle.x) ** 2 + (this._y - circle.y) ** 2) < ((this._r + circle.r) ** 2);
+  }
+  //dynamic collision methods response for circles
+  /** @param {Circle} circle */
+  resolveCircleCollision(circle) {
+    let distance = Math.sqrt((this._x - circle.x) ** 2 + (this._y - circle.y) ** 2);
+    if (distance === 0) {
+      return;
+    }
+    const overlap = (this._r + circle.r) - distance;
+    const collisionNormal = {
+      x: (circle.x - this._x) / distance,
+      y: (circle.y - this._y) / distance,
+    };
+    this._x -= overlap * collisionNormal.x;
+    this._y -= overlap * collisionNormal.y;
+    circle.x += overlap * collisionNormal.x;
+    circle.y += overlap * collisionNormal.y;
+
+    const relativeVelocity = {
+      x: this._xVelocity - circle.xVelocity,
+      y: this._yVelocity - circle.yVelocity,
+    };
+    const speed = relativeVelocity.x * collisionNormal.x + relativeVelocity.y * collisionNormal.y;
+    if (speed < 0) {
+      return;
+    }
+    const impulse = 2 * speed / (this._r + circle.r);
+    this._xVelocity -= impulse * circle.r * collisionNormal.x;
+    this._yVelocity -= impulse * circle.r * collisionNormal.y;
+    circle.xVelocity += impulse * this._r * collisionNormal.x;
+    circle.yVelocity += impulse * this._r * collisionNormal.y;
+  }
+
+  /** @returns {CircleInitData} */
+  initData() {
     return {
       x: this._x,
       y: this._y,
@@ -87,6 +149,15 @@ export class Circle {
       lineWidth: this._lineWidth,
       strokeStyle: this._strokeStyle,
       fillStyle: this._fillStyle,
+    }
+  }
+  /** @returns {CircleStateData} */
+  stateData() {
+    return {
+      x: this._x,
+      y: this._y,
+      xVelocity: this._xVelocity,
+      yVelocity: this._yVelocity,
     }
   }
 
@@ -110,7 +181,7 @@ export class Circle {
     return this._x;
   }
   get y() {
-  return this._y;
+    return this._y;
   }
   get r() {
     return this._r;

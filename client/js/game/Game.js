@@ -8,9 +8,10 @@ export class Game {
   /** 
    * @param {HTMLCanvasElement} canvas
     */
-  constructor(canvas) {
+  constructor(canvas, mainPlayerId = null) {
     this._canvas = canvas;
     this._mainPlayer = null;
+    this._mainPlayerId = mainPlayerId;
     /** @type {Player[]} */
     this._players = [];
     this._ball = null;
@@ -22,7 +23,6 @@ export class Game {
       /** @type {Circle[]} */
       circles: [],
     };
-
     this._mainLoopRequestId = 0;
     this._scaleFactor = 1;
   }
@@ -32,6 +32,8 @@ export class Game {
     const ctx = this._canvas.getContext('2d');
     ctx.reset();
     ctx.scale(this._scaleFactor, this._scaleFactor);
+    ctx.textAlign = 'center';
+
     let previousTime = 0;
     /** @param {DOMHighResTimeStamp} timeStamp */
     const mainLoop = (timeStamp) => {
@@ -40,6 +42,9 @@ export class Game {
 
       //--------------------
       ctx.clearRect(0, 0, this._canvas.width / this._scaleFactor, this._canvas.height / this._scaleFactor);
+      
+      ctx.fillStyle = this._stadium.color;
+      ctx.fillRect(0, 0, this._canvas.width / this._scaleFactor, this._canvas.height / this._scaleFactor);
 
       this._stadium.walls.forEach((wall) => wall.draw(ctx));
       this._stadium.lines.forEach((line) => line.draw(ctx));
@@ -54,58 +59,45 @@ export class Game {
     }
     mainLoop(previousTime);
   }
-
-  /** @param {{players: import('../../types.js').PlayerData[], ball: import('../../types.js').BallData}} data*/
-  reset(data) {
-    this.addPlayers(data.players, this._mainPlayer.id);
-    this.addBall(data.ball);
-  }
-
   stop() {
     cancelAnimationFrame(this._mainLoopRequestId);
   }
 
+  /** @param {{players: import('../../types.js').PlayerInitData[], ball: import('../../types.js').BallInitData}} data*/
+  reset(data) {
+    this._players = [];
+    this._ball = null;
+    this.addPlayers(data.players);
+    this.addBall(data.ball);
+  }
+
   /** @param {import('../../types.js').GameStateData} data  */
   updateGame(data) {
-    // if there are players in the incoming data that are less than 'this._players', they will not be included in the uptaedPlayers array.
-    const updatedPlayers = [];
-
-    let remoteI = 0;
-    for (let localI = 0; localI < this._players.length; localI++) {
-      if (remoteI >= data.players.length) {
-        break;
-      }
-      if (this._players[localI].id === data.players[remoteI].id) {
-        this._players[localI].updateData(data.players[remoteI]);
-        updatedPlayers.push(this._players[localI]);
-        remoteI++;
+    for (let i = 0; i < this._players.length; i++) {
+      this._players[i].updateData(data.players[i]);
+      if (this._players[i].id !== data.players[i].id) {
+        console.error('Players id mismatch');
       }
     }
-    for (remoteI; remoteI < data.players.length; remoteI++) {
-      updatedPlayers.push(new Player(data.players[remoteI]));
-    }
-    this._players = updatedPlayers;
-
     this._ball.updateData(data.ball);
   }
   /** 
-   * @param {import('../../types.js').PlayerData[]} players 
-   * @param {string} mainPlayerId  
+   * @param {import('../../types.js').PlayerInitData[]} players   
    */
-  addPlayers(players, mainPlayerId) {
-    const newPlayers = []
+  addPlayers(players) {
     players.forEach((player) => {
-      if (player.id === mainPlayerId) {
-        this._mainPlayer = new Player(player);
-        newPlayers.push(this._mainPlayer);
-        return;
+      this._players.push(new Player(player));
+      if (player.id === this._mainPlayerId) {
+        this._mainPlayer = this._players[this._players.length - 1];
       }
-      newPlayers.push(new Player(player));
-    })
-    this._players = newPlayers;
+    });
   }
 
-  /** @param {import('../../types.js').BallData} data  */
+  removePlayer(id) {
+    this._players = this._players.filter((player) => player.id !== id);
+  }
+
+  /** @param {import('../../types.js').BallInitData} data  */
   addBall(data) {
     this._ball = new Ball(data);
   }
@@ -125,6 +117,7 @@ export class Game {
   }
   /** @param {import('../../types.js').StadiumData} data  */
   buildStadium(data) {
+    this._stadium.color = data.color || 'white';
     data.walls.forEach((wall) => this._stadium.walls.push(new Wall(wall)));
     data.lines.forEach((line) => this._stadium.lines.push(new Line(line)));
     data.circles.forEach((circle) => this._stadium.circles.push(new Circle(circle)));

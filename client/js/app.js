@@ -4,6 +4,7 @@ import { GameView } from './components/GameView.js';
 import { Game } from './game/Game.js';
 import { ContinueDialog } from './components/ContinueDialog.js';
 import { DisconnectDialog } from './components/DisconnectDialog.js';
+import { NamePrompt } from './components/NamePrompt.js';
 
 export class App {
   /** @param {HTMLElement} appElm */
@@ -15,8 +16,20 @@ export class App {
     this._randomLatencygMs = 1 || Math.random() * 100 + 200;
     this._gameTimer = 0;
     this._gameTimerId = 0;
+    this.userName = `user${Math.floor(Math.random() * 1000)}`;
   }
   //add htmlElement to app root
+
+  showNamePrompt(){
+    this._appElm.replaceChildren(NamePrompt({
+      handleSubmit: (name) => {
+        this.userName = name || this.userName;
+        this.showRoomList();
+      },
+      placeholder: this.userName
+    }));
+  }
+  
   
   showRoomList() {
     this._game && this._game.stop();
@@ -34,7 +47,7 @@ export class App {
   }
 
   showContinueDialog({ timeLeft, handleExit, handleContinue }) {
-    const timeoutId = setTimeout(() => {handleExit();continueDialogElm.remove();}, timeLeft);
+    const timeoutId = setTimeout(() => { handleExit(); continueDialogElm.remove(); }, timeLeft);
     const continueDialogElm = ContinueDialog({
       timeLeft,
       handleExit: () => {
@@ -51,11 +64,11 @@ export class App {
     this._appElm.append(continueDialogElm);
   }
 
-  setGameScore(score){
+  setGameScore(score) {
     const scoreElm = document.querySelector('#game-view .bar__score');
     scoreElm.textContent = `${score[0]}:${score[1]}`;
   }
-  setGameTimer(timeLeft){
+  setGameTimer(timeLeft) {
     const timerElm = document.querySelector('#game-view .bar__timer');
     clearInterval(this._gameTimerId);
     if (timeLeft < 0) {
@@ -83,6 +96,7 @@ export class App {
     const socket = window.io(BACKEND_URL, {
       query: {
         roomId,
+        name: this.userName
       }
     });
     socket.on('connect', () => {
@@ -114,20 +128,20 @@ export class App {
     }
     const gameContainerElm = document.querySelector('#game-view .game-view__container');
     const barContainer = document.querySelector('#game-view .game-view__bar-container');
-    
+
     this.setGameScore(data.score);
     this.setGameTimer(data.timeLeft);
-
+    /** @type {HTMLElement} */
     const gameViewElm = document.querySelector('#game-view');
     this.bindControls(gameViewElm);
 
     const { width: dWidth, height: dHeight } = gameContainerElm.getBoundingClientRect();
 
-    this._game = new Game(canvas);
+    this._game = new Game(canvas, this._socket.id);
     this._game.changeDimensions(data.width, data.height, dWidth, dHeight - barContainer.getBoundingClientRect().height);
-    this._game.addPlayers(data.players, this._socket.id);
-    this._game.addBall(data.ball);
     this._game.buildStadium(data.stadium);
+    this._game.addPlayers(data.players);
+    this._game.addBall(data.ball);
     this._game.start();
 
     // should be registered after game creation. Reason: Possibility earlier invoke than 'game:init' event
@@ -135,14 +149,20 @@ export class App {
       this._game.updateGame(data);
     });
 
-    this._socket.on('game:goal', (data) => {
-      console.log('goal', data);
+    this._socket.on('game:add-player', /** @param {import('../types.js').PlayerInitData} data */(data) => {
+      this._game.addPlayers([data]);
     });
-    this._socket.on('game:end', (data) => {
-      console.log('end', data);
-    })
 
-    this._socket.on('game:restart', /** @param {import('../types.js').gameRestartData} data */(data) => {
+    this._socket.on('game:remove-player', /** @param {{id: string, changedPlayer: import('../types.js').PlayerInitData}} param*/({id, changedPlayer = null}) => {
+      this._game.removePlayer(id);
+      if (changedPlayer) {
+        this._game.removePlayer(changedPlayer.id);
+        this._game.addPlayers([changedPlayer]);
+      }
+    });
+    
+
+    this._socket.on('game:restart', /** @param {import('../types.js').GameRestartData} data */(data) => {
       const { score, timeLeft, ...restData } = data;
       this.setGameScore(score);
       timeLeft && this.setGameTimer(timeLeft);
@@ -152,7 +172,7 @@ export class App {
       gameViewElm.focus();
     })
 
-    this._socket.on('game:continue', /** @param {import('../types.js').continueEventData} data */(data, callback) => {
+    this._socket.on('game:continue', /** @param {import('../types.js').GameContinueData} data */(data, callback) => {
       const timeLeft = data.timeout - (Date.now() - data.dateNow);
       this.setGameTimer(-1);
       this.showContinueDialog({
@@ -169,6 +189,10 @@ export class App {
     let isNewDirection = false;
     gameView.focus();
     gameView.addEventListener('keydown', (e) => {
+      const isModifierPressed = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
+      if (isModifierPressed) {
+        return;
+      }
       switch (e.code) {
         case 'KeyW': {
           if (!controls[0]) { isNewDirection = true; }
@@ -197,7 +221,7 @@ export class App {
         }
       }
       if (isNewDirection) {
-        setTimeout(() => { this._socket.emit('player:move', controls); }, this._randomLatencygMs);
+        setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
         isNewDirection = false;
       }
     });
@@ -231,7 +255,7 @@ export class App {
         }
       }
       if (isNewDirection) {
-        setTimeout(() => { this._socket.emit('player:move', controls); }, this._randomLatencygMs);
+        setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
         isNewDirection = false;
       }
     });

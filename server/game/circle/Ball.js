@@ -5,9 +5,4 @@ export class Ball extends Circle {
   constructor(data){
     super(data);
   }
-  
-  /** @returns {BallData} */
-  get data(){
-    return  super.getData();
-  }
 }
