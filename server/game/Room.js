@@ -12,7 +12,7 @@ export class Room {
     this._players = [];
     this._playersLimit = 8;
 
-    this._winningScore = 1;
+    this._winningScore = 4;
     this._startTime = 0;
     this._gameTimeLimit = 1800000; //ms
 

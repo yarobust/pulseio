@@ -1,11 +1,13 @@
 const ACCELERATION = 0.000275; //px/ms
-const FRICTION = 0.001;
+const FRICTION = 0.001 * 1;
 
 export class Circle {
   /** @param {CircleConstructorData} data  */
   constructor(data) {
     this._x = data.x;
     this._y = data.y;
+    this._prevX = data.x;
+    this._prevY = data.y;
     this._r = data.r;
     this._xVelocity = 0;
     this._yVelocity = 0;
@@ -32,12 +34,8 @@ export class Circle {
       this._yVelocity *= 1 - deltaFriction;
     }
 
-    // if (Math.abs(this._xVelocity) > this._r / deltaTime) {
-    //   this._xVelocity = this._r / deltaTime * Math.sign(this._xVelocity);
-    // }
-    // if (Math.abs(this._yVelocity) > this._r / deltaTime) {
-    //   this._yVelocity = this._r / deltaTime * Math.sign(this._yVelocity);
-    // } 
+    this._prevX = this._x;
+    this._prevY = this._y;
 
     this._x += this._xVelocity * deltaTime;
     this._y += this._yVelocity * deltaTime;
@@ -54,8 +52,18 @@ export class Circle {
     this._yVelocity = 0;
     this._fillStyle = fillStyle || this._fillStyle;
   }
-  /** @param {import('../line/Wall.js').Wall} wall  */
+  /** 
+   * @param {import('../line/Wall.js').Wall} wall
+   * @returns {x: number, y: number, method: string} closest point on the wall to the circle
+   * */
   checkWallCollision(wall) {
+
+    //should be first check
+    const intersection = wall.getLineIntersection(this._prevX, this._prevY, this._x, this._y);
+    if (intersection) {
+      return { x: intersection.x, y: intersection.y, method: 'intersection' };
+    }
+
     const dx = wall.x1 - wall.x0;
     const dy = wall.y1 - wall.y0;
     const l2 = dx * dx + dy * dy;
@@ -65,32 +73,48 @@ export class Circle {
     const t = Math.max(0, Math.min(1, ((this._x - wall.x0) * dx + (this._y - wall.y0) * dy) / l2));
     const projectionX = wall.x0 + t * dx;
     const projectionY = wall.y0 + t * dy;
-    const distance = Math.sqrt((this._x - projectionX) ** 2 + (this._y - projectionY) ** 2);
-    return distance < this._r;
+    const distanceToWall = Math.sqrt((this._x - projectionX) ** 2 + (this._y - projectionY) ** 2);
 
-    //optimization: return calculation and then use it in resolveWallCollision
+    if (distanceToWall < this._r) {
+      return { x: projectionX, y: projectionY, method: 'overlap' };
+    }
+    return null;
   }
 
   /** @param {import('../line/Wall.js').Wall} wall  */
-  resolveWallCollision(wall) {
-    const dx = wall.x1 - wall.x0;
-    const dy = wall.y1 - wall.y0;
-    const l2 = dx * dx + dy * dy;
-    if (l2 === 0) {
-      return;
+  resolveWallCollision(wall, closestPoint) {
+    // if (closestPoint.method === 'intersection') {
+    //   const v ={ x: this._x - closestPoint.x, y: this._y - closestPoint.y}
+    //   //Step 1: Normalize the axis vector a
+    //   const axisNorm = wall.normalize();
+    //   //Step 2: Calculate the distance from the circle center to the line
+    //   let dot = wall.dotProduct(axisNorm, v);
+    //   let vProj = {x: dot * axisNorm.x, y: dot * axisNorm.y};
+    //   // Step 3: Calculate the reflection vector
+    //   const reflectedVector = {
+    //     x: 2 * vProj.x - v.x,
+    //     y: 2 * vProj.y - v.y,  
+    //   }
+
+    //   this._x = closestPoint.x + reflectedVector.x + Math.sign(reflectedVector.x) * this._r;
+    //   this._y = closestPoint.y + reflectedVector.y + Math.sign(reflectedVector.y) * this._r; 
+    //   this._xVelocity = 1.99 * Math.sign(reflectedVector.x) * Math.abs(this._xVelocity);
+    //   this._yVelocity = 1.99 * Math.sign(reflectedVector.y) * Math.abs(this._xVelocity);
+    //   return;
+    // }
+
+    if (closestPoint.method === 'intersection') {
+      const perpendicular = wall.perpendicular();
+      this._x = closestPoint.x + perpendicular.x * (this._r - 1);
+      this._y = closestPoint.y + perpendicular.y * (this._r - 1);
     }
-    //the point on the wall line closest to the circle.[]
-    // t - magnitude of unit vector
-    const t = Math.max(0, Math.min(1, ((this._x - wall.x0) * dx + (this._y - wall.y0) * dy) / l2));
-    const projectionX = wall.x0 + t * dx;
-    const projectionY = wall.y0 + t * dy;
-    const distance = Math.sqrt((this._x - projectionX) ** 2 + (this._y - projectionY) ** 2);
+
+    const distance = Math.sqrt((this._x - closestPoint.x) ** 2 + (this._y - closestPoint.y) ** 2);
     const overlap = this._r - distance;
 
-    //unit vector pointing from the closest point on the wall to the circle's center.
     const collisionNormal = {
-      x: (this._x - projectionX) / distance,
-      y: (this._y - projectionY) / distance,
+      x: (this._x - closestPoint.x) / distance,
+      y: (this._y - closestPoint.y) / distance,
     };
     this._x += overlap * collisionNormal.x;
     this._y += overlap * collisionNormal.y;

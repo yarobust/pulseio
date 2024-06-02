@@ -47,8 +47,8 @@ export class Game {
     this._rightSpawnPoints = [];
 
     this._gameLoopTimeoutId;
-    this._tickRate = 1000 / 120;
-
+    this._tickRate = 1000 / 20;
+ 
     //createSpawnPoints should go before buildStadium
     this.createSpawnPoints();
     this.buildStadium();
@@ -151,16 +151,17 @@ export class Game {
 
 
     //collision with walls (possible optimization when placing walls one after the other. if there is collision check also adjacent  wall)
-    this._stadium.walls.forEach((wall) => {
+    for (let wall of this._stadium.walls) {
       this._players.forEach((player) => {
-        if (player.checkWallCollision(wall)) {
-          player.resolveWallCollision(wall);
-        }
-      })
-      if (wall.type === 'normal' && this._ball.checkWallCollision(wall)) {
-        this._ball.resolveWallCollision(wall);
+        const pwClosestPoint = player.checkWallCollision(wall);
+        pwClosestPoint && player.resolveWallCollision(wall, pwClosestPoint);
+      }) 
+      if (wall.type === 'goal-line') {
+        // continue;
       }
-    })
+      const bwClosestPoint = this._ball.checkWallCollision(wall);
+      bwClosestPoint && this._ball.resolveWallCollision(wall, bwClosestPoint);
+    }
 
 
     //collision player-player
@@ -198,7 +199,7 @@ export class Game {
     return false;
   }
 
-  start() {
+  start() { 
     clearTimeout(this._gameLoopTimeoutId);
     // possible questions???
     let previousTime = performance.now();
@@ -307,6 +308,23 @@ export class Game {
     const goalLineY0 = this._height / 2 - goalLineSize / 2;
     const goalLineY1 = goalLineY0 + goalLineSize;
     const lineWidth = Math.round(BALL_RADIUS / 10);
+
+    // // //remove
+    // this._stadium.walls.push(new Wall({
+    //   x0: this._width / 2,
+    //   y0: this._height * 0.25,
+    //   x1: this._width * 0.75,
+    //   y1: this._height * 0.75,
+    //   lineWidth,
+    // }), new Wall({
+    //   x0: this._width * 0.25,
+    //   y0: this._height * 0.25,
+    //   x1: this._width * 0.5,
+    //   y1: this._height * 0.75,
+    //   lineWidth,
+    // }))
+  
+    
 
     //rectangle
     this._stadium.walls.push(new Wall({
