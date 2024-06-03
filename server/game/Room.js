@@ -3,7 +3,7 @@ import { Game } from './Game.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class Room {
-  /** @param {{ioServer: import('socket.io').Server, roomName: string}} param0 */
+  /** @param {RoomConstructorData} param */
   constructor({ ioServer, roomName, playersLimit = 2, winningScore = 1, gameTimeLimit = 60000 }) {
     this._ioServer = ioServer;
     this._id = uuidv4();
@@ -15,6 +15,7 @@ export class Room {
     this._winningScore = winningScore;
     this._startTime = 0;
     this._gameTimeLimit = gameTimeLimit; //ms
+    this._waiting = true;
 
     this._playersInactivityLimit = 15000 * 10; //ms
     this._playersActivity = new Map();
@@ -24,8 +25,8 @@ export class Room {
     //createSpawnPoints should go before buildStadium
     this._game.createSpawnPoints(this._playersLimit);
     this._game.buildStadium();
-    this._sendUpdateRate = 1000 / 20;
-    this._sendUpdateIntervalId = 0;
+    this._sendUpdateRate = 1000 / 20; 
+    this._sendUpdateIntervalId = setInterval(() => {}, 0);
   }
   /** @param {import('socket.io').Socket} socket  */
   handlePlayerConnection(socket, name) {
@@ -55,7 +56,7 @@ export class Room {
     this._playersActivity.set(socket, Date.now());
 
     this._ioServer.to(this._id).emit('game:add-player', newPlayer);
-    const timeLeft = Math.max(this._gameTimeLimit - (performance.now() - this._startTime), -1);
+    const timeLeft = this._waiting ? -1 : this._gameTimeLimit - (performance.now() - this._startTime);
     socket.emit('game:init', { ...this._game.initData, timeLeft });
   }
   /** @param {import('socket.io').Socket} socket  */
@@ -68,8 +69,10 @@ export class Room {
 
   startGame() {
     clearInterval(this._sendUpdateIntervalId);
-    this._game.start();
+    this._waiting = false;
 
+    this._game.start();
+    console.log('start game');
     this._startTime = performance.now();
     let previousPlayersActivityCheck = this._startTime;
 
@@ -97,6 +100,7 @@ export class Room {
     }, this._sendUpdateRate);
   }
   restartGame() {
+    this._waiting = true;
     const timeout = 6000;
     this._players.forEach((player) => {
       player.timeout(timeout).emit('game:continue', {

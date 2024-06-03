@@ -13,7 +13,8 @@ export class App {
     this._socket = null;
     this._game = null;
     // for debug purposes
-    this._randomLatencygMs = 1 || Math.random() * 100 + 200;
+    this._randomLatencygMs = 100 || (Math.random() < 0.5? 1000 : 10);
+    alert(this._randomLatencygMs)
     this._gameTimer = 0;
     this._gameTimerId = 0;
     this.userName = `user${Math.floor(Math.random() * 1000)}`;
@@ -32,9 +33,9 @@ export class App {
   
   
   showRoomList() {
+    this._socket && this._socket.disconnect();
     this._game && this._game.stop();
     this._game = null;
-    this._socket && this._socket.disconnect();
     this._appElm.replaceChildren(RoomList({
       connectToRoom: this.connectToRoom.bind(this)
     }));
@@ -146,7 +147,7 @@ export class App {
 
     // should be registered after game creation. Reason: Possibility earlier invoke than 'game:init' event
     this._socket.on('game:update', /** @param {import('../types.js').GameStateData} data */(data) => {
-      this._game.updateGame(data);
+      setTimeout(() => { this._game.matchServerState(data); }, this._randomLatencygMs);
     });
 
     this._socket.on('game:add-player', /** @param {import('../types.js').PlayerInitData} data */(data) => {
@@ -221,7 +222,9 @@ export class App {
         }
       }
       if (isNewControls) {
-        setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
+        this._game.updateMainPlayerControls(controls);
+        const copyControls = [...controls];
+        setTimeout(() => { this._socket.emit('player:change-controls', copyControls); }, this._randomLatencygMs);
         isNewControls = false;
       }
     });
@@ -255,7 +258,9 @@ export class App {
         }
       }
       if (isNewControls) {
-        setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
+        this._game.updateMainPlayerControls(controls);
+        const copyControls = [...controls];
+        setTimeout(() => { this._socket.emit('player:change-controls', copyControls); }, this._randomLatencygMs);
         isNewControls = false;
       }
     });

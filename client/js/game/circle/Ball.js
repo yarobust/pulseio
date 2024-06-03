@@ -5,12 +5,4 @@ export class Ball extends Circle {
   constructor(data){
     super(data);
   }
-
-  /** @param {import('../../../types').BallStateData} data  */
-  updateData(data) {
-    this._x = data.x;
-    this._y = data.y;
-    this._xVelocity = data.xVelocity;
-    this._yVelocity = data.yVelocity;
-  }
 }

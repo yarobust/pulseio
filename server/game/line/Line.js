@@ -19,10 +19,6 @@ export class Line {
     return { x: -normalized.y, y: normalized.x };
   }
 
-  dotProduct(v1, v2) {
-    return v1.x * v2.x + v1.y * v2.y;
-  }
-
   getLineIntersection(x0, y0, x1, y1) {
     const s1_x = x1 - x0;
     const s1_y = y1 - y0;

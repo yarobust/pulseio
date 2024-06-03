@@ -1,4 +1,5 @@
 import { Circle } from './Circle.js';
+import { Ball } from './Ball.js';
 
 export class Player extends Circle {
   /** @param {import('../../../types').PlayerInitData} data*/
@@ -10,43 +11,69 @@ export class Player extends Circle {
     this._controls = controls || Array(5).map(() => false);
     this._actionStyle = actionStyle || 'yellow';
   }
+  /** @param {number} deltaTime  */
+  move(deltaTime) {
+    const deltaAcceleration = this._acceleration * deltaTime;
+    if (this._controls[0]) {
+      this._yVelocity -= deltaAcceleration;
+      // this._serverYVelocity -= deltaAcceleration;
+    }
+    if (this._controls[1]) {
+      this._xVelocity += deltaAcceleration;
+      // this._serverXVelocity += deltaAcceleration;
+    }
+    if (this._controls[2]) {
+      this._yVelocity += deltaAcceleration;
+      // this._serverYVelocity += deltaAcceleration;
+    }
+    if (this._controls[3]) {
+      this._xVelocity -= deltaAcceleration;
+      // this._serverXVelocity -= deltaAcceleration;
+    }
+    super.move(deltaTime);
+  }
+  /** @param {Circle} circle */
+  resolveCircleCollision(circle) {
+    super.resolveCircleCollision(circle);
+    if (this._controls[4] && circle instanceof Ball) {
+      //make ball bounce off player
+      const dx = this._x - circle.x;
+      const dy = this._y - circle.y;
+      const angle = Math.atan2(dy, dx);
+      circle.xVelocity = -Math.cos(angle) * circle._acceleration * 2000;
+      circle.yVelocity = -Math.sin(angle) * circle._acceleration * 2000;
+      this._controls[4] = false;
+    }
+  }
 
   /** @param {import('../../../types').PlayerStateData} data */
   updateData(data) {
-    this._x = data.x;
-    this._y = data.y;
-    this._xVelocity = data.xVelocity;
-    this._yVelocity = data.yVelocity;
+    const {controls, ...restData} = data;
+    super.updateData(restData);
     this._controls = data.controls;
   }
-  // Eliminate jerks between server responses
-  interpolate() {
-
-  }
-
-  reset(data) {
-
-  }
-  
 
   /** @param {CanvasRenderingContext2D} ctx */
   draw(ctx) {
-    ctx.beginPath();
-    //todo: round position
-    ctx.arc(this._x, this._y, this._r - this._lineWidth / 2, 0, 2 * Math.PI);
-    ctx.strokeStyle = this._strokeStyle;
-    ctx.lineWidth = this._lineWidth;
-    ctx.stroke();
-    if (this._fillStyle) {
-      ctx.fillStyle = this._controls[4] ? this._actionStyle : this._fillStyle;
+    super.draw(ctx);    
+    if (this._controls[4]) {
+      ctx.beginPath();
+      ctx.arc(this._x, this._y, this._r - this._lineWidth / 2, 0, 2 * Math.PI);
+      ctx.fillStyle = this._actionStyle
       ctx.fill();
     }
-    
     ctx.fillText(this._name, this._x, this._y + this._r + 10);
   }
 
-  get id(){
+  /** @param {import('../../../types').Controls} arr  */
+  set controls(arr) {
+    this._controls = arr;
+  }
+  get controls() {
+    return [...this._controls];
+  }
+  get id() {
     return this._id;
   }
-  
+
 }

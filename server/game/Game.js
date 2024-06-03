@@ -92,10 +92,10 @@ export class Game {
 
     //remove player from team
     for (let i = 0; i < this._players.length / 2; i++) {
-      if (this._leftTeam[i].id === playerId) {
+      if (this._leftTeam[i]?.id === playerId) {
         this._leftTeam.splice(i, 1);
         break;
-      } else if (this._rightTeam[i].id === playerId) {
+      } else if (this._rightTeam[i]?.id === playerId) {
         this._rightTeam.splice(i, 1);
         break;
       }

@@ -10,10 +10,12 @@ export class Game {
     */
   constructor(canvas, mainPlayerId = null) {
     this._canvas = canvas;
-    this._mainPlayer = null;
     this._mainPlayerId = mainPlayerId;
+    /** @type {Player} */
+    this._mainPlayer = null;
     /** @type {Player[]} */
     this._players = [];
+    /** @type {Ball} */
     this._ball = null;
     this._stadium = {
       /** @type {Wall[]} */
@@ -36,13 +38,15 @@ export class Game {
 
     let previousTime = 0;
     /** @param {DOMHighResTimeStamp} timeStamp */
-    const mainLoop = (timeStamp) => {
+    const gameLoop = (timeStamp) => {
       const deltaTime = timeStamp - previousTime;
       previousTime = timeStamp;
 
       //--------------------
+      this.updateGameState(deltaTime);
+
       ctx.clearRect(0, 0, this._canvas.width / this._scaleFactor, this._canvas.height / this._scaleFactor);
-      
+
       ctx.fillStyle = this._stadium.color;
       ctx.fillRect(0, 0, this._canvas.width / this._scaleFactor, this._canvas.height / this._scaleFactor);
 
@@ -55,29 +59,72 @@ export class Game {
       })
       this._ball.draw(ctx);
 
-      this._mainLoopRequestId = requestAnimationFrame(mainLoop);
+      this._mainLoopRequestId = requestAnimationFrame(gameLoop);
     }
-    mainLoop(previousTime);
+    gameLoop(previousTime);
   }
   stop() {
     cancelAnimationFrame(this._mainLoopRequestId);
   }
 
-  /** @param {{players: import('../../types.js').PlayerInitData[], ball: import('../../types.js').BallInitData}} data*/
-  reset(data) {
-    this._players = [];
-    this._ball = null;
-    this.addPlayers(data.players);
-    this.addBall(data.ball);
+  updateGameState = (deltaTime) => {
+    this._players.forEach((player) => {
+      player.move(deltaTime);
+      player.interpolate(deltaTime);
+    })
+    this._ball.move(deltaTime);
+    this._ball.interpolate(deltaTime);
+    //collision with walls (possible optimization when placing walls one after the other. if there is collision check also adjacent  wall)
+    for (let wall of this._stadium.walls) {
+      this._players.forEach((player) => {
+        const pwClosestPoint = player.checkWallCollision(wall);
+        pwClosestPoint && player.resolveWallCollision(wall, pwClosestPoint);
+      })
+      if (wall.type === 'goal-line') {
+        continue;
+      }
+      const bwClosestPoint = this._ball.checkWallCollision(wall);
+      bwClosestPoint && this._ball.resolveWallCollision(wall, bwClosestPoint);
+    }
+
+
+    //collision player-player
+    for (let currentPlayer = 0; currentPlayer < this._players.length - 1; currentPlayer++) {
+      for (let nextPlayer = currentPlayer + 1; nextPlayer < this._players.length; nextPlayer++) {
+        if (this._players[currentPlayer].checkCircleCollision(this._players[nextPlayer])) {
+          this._players[currentPlayer].resolveCircleCollision(this._players[nextPlayer]);
+        }
+      }
+    }
+
+    //players-ball collision
+    this._players.forEach((player) => {
+      if (player.checkCircleCollision(this._ball)) {
+        player.resolveCircleCollision(this._ball);
+      }
+    })
   }
 
+
   /** @param {import('../../types.js').GameStateData} data  */
-  updateGame(data) {
+  matchServerState(data) {
+    //remove----------
     for (let i = 0; i < this._players.length; i++) {
-      this._players[i].updateData(data.players[i]);
-      if (this._players[i].id !== data.players[i].id) {
-        console.error('Players id mismatch');
+      if (this._mainPlayerId === this._players[i].id && i%2 === 0) {
+        // return;
       }
+    }
+    //------------
+    for (let i = 0; i < this._players.length; i++) {
+      if (this._players[i].id !== data.players[i]?.id) {
+        console.error('Players id mismatch');
+        continue;
+      }
+      if (this._players[i].id === this._mainPlayerId) {
+        this._mainPlayer.updateData({ ...data.players[i], controls: this._mainPlayer.controls });
+        continue;
+      }
+      this._players[i].updateData(data.players[i]);
     }
     this._ball.updateData(data.ball);
   }
@@ -97,6 +144,12 @@ export class Game {
     this._players = this._players.filter((player) => player.id !== id);
   }
 
+  updateMainPlayerControls(controls) {
+    if (this._mainPlayer) {
+      this._mainPlayer.controls = controls;
+    }
+  }
+
   /** @param {import('../../types.js').BallInitData} data  */
   addBall(data) {
     this._ball = new Ball(data);
@@ -113,7 +166,6 @@ export class Game {
       this._canvas.height = dHeight;
       this._scaleFactor = dHeight / sHeight;
     }
-
   }
   /** @param {import('../../types.js').StadiumData} data  */
   buildStadium(data) {
@@ -121,5 +173,12 @@ export class Game {
     data.walls.forEach((wall) => this._stadium.walls.push(new Wall(wall)));
     data.lines.forEach((line) => this._stadium.lines.push(new Line(line)));
     data.circles.forEach((circle) => this._stadium.circles.push(new Circle(circle)));
+  }
+  /** @param {{players: import('../../types.js').PlayerInitData[], ball: import('../../types.js').BallInitData}} data*/
+  reset(data) {
+    this._players = [];
+    this._ball = null;
+    this.addPlayers(data.players);
+    this.addBall(data.ball);
   }
 }

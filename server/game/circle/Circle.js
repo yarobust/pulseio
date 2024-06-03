@@ -56,7 +56,7 @@ export class Circle {
   }
   /** 
    * @param {import('../line/Wall.js').Wall} wall
-   * @returns {x: number, y: number, method: string} closest point on the wall to the circle
+   * @returns {{x: number, y: number, method: string}} closest point on the wall to the circle
    * */
   checkWallCollision(wall) {
 
@@ -70,7 +70,7 @@ export class Circle {
     const dy = wall.y1 - wall.y0;
     const l2 = dx * dx + dy * dy;
     if (l2 === 0) {
-      return false;
+      return null;
     }
     const t = Math.max(0, Math.min(1, ((this._x - wall.x0) * dx + (this._y - wall.y0) * dy) / l2));
     const projectionX = wall.x0 + t * dx;

@@ -19,6 +19,15 @@ interface PlayerConstructorData extends CircleConstructorData {
 interface BallConstructorData extends CircleConstructorData {
 }
 
+interface RoomConstructorData {
+  ioServer: import('socket.io').Server,
+  roomName: string,
+  playersLimit: number,
+  winningScore: number,
+  gameTimeLimit: number,
+
+}
+
 interface CircleInitData {
   x: number,
   y: number,
@@ -32,7 +41,7 @@ interface CircleInitData {
   fillStyle?: string,
 }
 
-interface BallInitData extends CircleInitData {}
+interface BallInitData extends CircleInitData { }
 
 interface PlayerInitData extends CircleInitData {
   id: string,
@@ -48,7 +57,7 @@ interface CircleStateData {
   yVelocity: number,
 }
 
-interface BallStateData extends CircleStateData {}
+interface BallStateData extends CircleStateData { }
 
 interface PlayerStateData extends CircleStateData {
   id: string,
