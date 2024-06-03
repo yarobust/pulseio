@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class Room {
   /** @param {{ioServer: import('socket.io').Server, roomName: string}} param0 */
-  constructor({ ioServer, roomName, playersLimit = 2, winningScore = 1, gameTimeLimit = 60000}) {
+  constructor({ ioServer, roomName, playersLimit = 2, winningScore = 1, gameTimeLimit = 60000 }) {
     this._ioServer = ioServer;
     this._id = uuidv4();
     this._name = roomName;
@@ -16,7 +16,7 @@ export class Room {
     this._startTime = 0;
     this._gameTimeLimit = gameTimeLimit; //ms
 
-    this._playersInactivityLimit = 15000; //ms
+    this._playersInactivityLimit = 15000 * 10; //ms
     this._playersActivity = new Map();
 
     /** @type {Game} */

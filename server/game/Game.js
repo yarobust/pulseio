@@ -18,7 +18,6 @@ export class Game {
     this._height = this._width * 0.5;
     this._isGoal = false;
     this._score = [0, 0];
-    this._gameState = {};
     /** @type {Player[]} */
     this._players = [];
     /** @type {Player[]} */
@@ -138,6 +137,7 @@ export class Game {
     // possible questions???
     let previousTime = performance.now();
     let remainder = 0;
+
     const gameLoop = () => {
       const currentTime = performance.now();
       const deltaTime = currentTime - previousTime;
@@ -183,7 +183,6 @@ export class Game {
   restart() { //////////////////////change 
     this._isGoal = false;
     this._score = [0, 0];
-    this._gameState = {};
     this._ball.reset(this._width / 2, this._height / 2);
     // restart players position
 
@@ -253,11 +252,6 @@ export class Game {
     })
 
     !this._isGoal && this.checkGoal();
-
-    this._gameState = {
-      players: this._players.map((player) => player.stateData()),
-      ball: this._ball.stateData(),
-    }
   }
 
   checkGoal() {
@@ -482,7 +476,10 @@ export class Game {
   }
 
   get gameState() {
-    return this._gameState;
+    return {
+      players: this._players.map((player) => player.stateData()),
+      ball: this._ball.stateData(),
+    }
   }
 
   get isGoal() {
