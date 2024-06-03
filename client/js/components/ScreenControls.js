@@ -5,23 +5,30 @@ export function ScreenControls() {
   const arrowsContainerElm = document.createElement('div');
   arrowsContainerElm.classList.add('screen-controls__arrows-container');
   const upArrowElm = document.createElement('div');
-  upArrowElm.dataset.direction = 'up';
+  upArrowElm.dataset.controls = 'up';
   const rightArrowElm = document.createElement('div');
-  rightArrowElm.dataset.direction = 'right';
+  rightArrowElm.dataset.controls = 'right';
   const downArrowElm = document.createElement('div');
-  downArrowElm.dataset.direction = 'down';
+  downArrowElm.dataset.controls = 'down';
   const leftArrowElm = document.createElement('div');
-  leftArrowElm.dataset.direction = 'left';
+  leftArrowElm.dataset.controls = 'left';
   arrowsContainerElm.append(upArrowElm, rightArrowElm, downArrowElm, leftArrowElm);
 
+  const actionContainerElm = document.createElement('div');
+  actionContainerElm.classList.add('screen-controls__action-container');
+  const actionElm = document.createElement('div');
+  actionElm.dataset.controls = 'action';
+  actionContainerElm.append(actionElm);
+
+
   screenControlsElm.addEventListener('pointerdown', (e) => {
-    if (!(e.target instanceof HTMLElement && e.target.dataset.direction)) {
+    if (!(e.target instanceof HTMLElement && e.target.dataset.controls)) {
       return;
     }
     e.target.setPointerCapture(e.pointerId);
-    e.target.classList.add('screen-controls__arrow--pressed');
+    e.target.classList.add('screen-controls__controls--pressed');
     let event;
-    switch (e.target.dataset.direction) {
+    switch (e.target.dataset.controls) {
       case 'up':
         event = new KeyboardEvent('keydown', { code: 'KeyW', bubbles: true });
         break;
@@ -34,16 +41,19 @@ export function ScreenControls() {
       case 'left':
         event = new KeyboardEvent('keydown', { code: 'KeyA', bubbles: true });
         break;
+      case 'action': 
+        event = new KeyboardEvent('keydown', { code: 'Space', bubbles: true });
+        break;
     }
     screenControlsElm.dispatchEvent(event);
   });
   screenControlsElm.addEventListener('pointerup', (e) => {
-    if (!(e.target instanceof HTMLElement && e.target.dataset.direction)) {
+    if (!(e.target instanceof HTMLElement && e.target.dataset.controls)) {
       return;
     }
-    e.target.classList.remove('screen-controls__arrow--pressed');
+    e.target.classList.remove('screen-controls__controls--pressed');
     let event;
-    switch (e.target.dataset.direction) {
+    switch (e.target.dataset.controls) {
       case 'up':
         event = new KeyboardEvent('keyup', { code: 'KeyW', bubbles: true });
         break;
@@ -56,10 +66,13 @@ export function ScreenControls() {
       case 'left':
         event = new KeyboardEvent('keyup', { code: 'KeyA', bubbles: true });
         break;
+      case 'action':
+        event = new KeyboardEvent('keyup', { code: 'Space', bubbles: true });
+        break;
     }
     screenControlsElm.dispatchEvent(event);
   });
 
-  screenControlsElm.append(arrowsContainerElm);
+  screenControlsElm.append(arrowsContainerElm, actionContainerElm);
   return screenControlsElm;
 }

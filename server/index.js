@@ -6,12 +6,11 @@ import { Server } from 'socket.io';
 
 import { Room } from './game/Room.js';
  
-const __dirname = dirname(fileURLToPath(import.meta.url));
- 
 const app = express();
 const server = createServer(app); 
 const ioServer = new Server(server);
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 app.use(express.static(join(__dirname, '../client')));
 
 //return information about available rooms
@@ -27,8 +26,9 @@ app.get('/rooms', (req, res) => {
   res.json(rooms);
 })
 
-const roomList = [new Room({ioServer, roomName: 'unnamed'}), new Room({ioServer, roomName: 'royale battle'})];
-roomList[0].startGame();
+const roomList = Array(5).fill(null).map((_, i) => {
+  return new Room({ioServer, roomName: `room ${i + 1}`, playersLimit: 2 * (i + 1), winningScore: i + 1, gameTimeLimit: 60000 * (i + 1)});
+})   
 roomList.forEach((room) => {
   room.startGame();
 });

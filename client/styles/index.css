@@ -30,7 +30,8 @@ button {
   border-radius: 0.2rem;
   border: 1px solid black;
   padding: 0.5rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto;
   flex-direction: column;
   gap: 0.25rem;
   white-space: pre;
@@ -180,6 +181,7 @@ button {
   height: 100%;
   position: absolute;
   display: flex;
+  justify-content: space-between;
 }
 
 #screen-controls .screen-controls__arrows-container {
@@ -197,7 +199,7 @@ button {
     "down down";
 }
 
-#screen-controls [data-direction] {
+#screen-controls [data-controls] {
   width: 0;
   height: 0;
   border-bottom: 3rem solid rgba(0, 0, 0, 0.5);
@@ -205,29 +207,42 @@ button {
   border-right: 1.5rem solid transparent;
 }
 
-#screen-controls [data-direction].screen-controls__arrow--pressed {
-  width: 0;
-  height: 0;
+#screen-controls [data-controls].screen-controls__controls--pressed {
   border-bottom-color:rgba(255, 0, 0, 0.5);
 }
 
-#screen-controls [data-direction="up"] {
+#screen-controls [data-controls="up"] {
   grid-area: up;
 }
 
-#screen-controls [data-direction="right"] {
+#screen-controls [data-controls="right"] {
   grid-area: right;
   transform: rotate(90deg);
 }
 
-#screen-controls [data-direction="down"] {
+#screen-controls [data-controls="down"] {
   grid-area: down;
   transform: rotate(180deg);
 }
 
-#screen-controls [data-direction="left"] {
+#screen-controls [data-controls="left"] {
   grid-area: left;
   transform: rotate(270deg);
+}
+
+#screen-controls .screen-controls__action-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin: 5%;
+}
+
+#screen-controls [data-controls="action"] {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
 }
 
 /* ------- */
@@ -240,7 +255,7 @@ button {
   max-width: 300px;
   outline: 1px solid black;
   background-color: white;
-  border-radius: 0.5rem;
+  border-radius: 0.2rem;
 }
 
 

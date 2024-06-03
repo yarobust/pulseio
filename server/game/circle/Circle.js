@@ -1,5 +1,5 @@
 const ACCELERATION = 0.000275; //px/ms
-const FRICTION = 0.001 * 1;
+const FRICTION = 0.001;
 
 export class Circle {
   /** @param {CircleConstructorData} data  */
@@ -8,7 +8,7 @@ export class Circle {
     this._y = data.y;
     this._prevX = data.x;
     this._prevY = data.y;
-    this._r = data.r;
+    this._r = data.r; 
     this._xVelocity = 0;
     this._yVelocity = 0;
     this._acceleration = ACCELERATION;
@@ -48,6 +48,8 @@ export class Circle {
   reset(x, y, fillStyle = null) {
     this._x = x;
     this._y = y;
+    this._prevX = x;
+    this._prevY = y;
     this._xVelocity = 0;
     this._yVelocity = 0;
     this._fillStyle = fillStyle || this._fillStyle;

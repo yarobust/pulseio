@@ -69,6 +69,8 @@ interface WallInitData extends LineInitData {
 }
 
 interface StadiumData {
+  width: number,
+  height: number,
   color?: string,
   walls: WallInitData[],
   lines: LineInitData[],
@@ -76,8 +78,6 @@ interface StadiumData {
 }
 
 interface GameInitData {
-  width: number,
-  height: number,
   players: PlayerInitData[],
   ball: BallInitData,
   stadium: StadiumData,

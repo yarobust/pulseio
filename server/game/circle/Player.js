@@ -8,7 +8,7 @@ export class Player extends Circle {
     super(data);
     this._id = id;
     this._name = name;
-    this._controls = Array(5).map(() => false);
+    this._controls = Array(5).fill(null).map(() => false);
     this._actionStyle = actionStyle || 'yellow';
   }
 
@@ -37,8 +37,8 @@ export class Player extends Circle {
       const dx = this._x - circle.x;
       const dy = this._y - circle.y;
       const angle = Math.atan2(dy, dx);
-      circle.xVelocity = -Math.cos(angle) * circle._acceleration * 4500;
-      circle.yVelocity = -Math.sin(angle) * circle._acceleration * 4500;
+      circle.xVelocity = -Math.cos(angle) * circle._acceleration * 2000;
+      circle.yVelocity = -Math.sin(angle) * circle._acceleration * 2000;
       // console.log(circle.xVelocity, circle.yVelocity);
       this._controls[4] = false;
     }
@@ -48,11 +48,11 @@ export class Player extends Circle {
   set controls(arr) {
     this._controls = arr;
   }
-  get id() {
-    return this._id;
-  }
   get controls() {
     return [...this._controls];
+  }
+  get id() {
+    return this._id;
   }
 
   reset(data) {

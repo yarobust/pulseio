@@ -138,7 +138,7 @@ export class App {
     const { width: dWidth, height: dHeight } = gameContainerElm.getBoundingClientRect();
 
     this._game = new Game(canvas, this._socket.id);
-    this._game.changeDimensions(data.width, data.height, dWidth, dHeight - barContainer.getBoundingClientRect().height);
+    this._game.changeDimensions(data.stadium.width, data.stadium.height, dWidth, dHeight - barContainer.getBoundingClientRect().height);
     this._game.buildStadium(data.stadium);
     this._game.addPlayers(data.players);
     this._game.addBall(data.ball);
@@ -186,7 +186,7 @@ export class App {
 
   bindControls(gameView) {
     const controls = [false, false, false, false, false];
-    let isNewDirection = false;
+    let isNewControls = false;
     gameView.focus();
     gameView.addEventListener('keydown', (e) => {
       const isModifierPressed = e.ctrlKey || e.altKey || e.metaKey || e.shiftKey;
@@ -195,68 +195,68 @@ export class App {
       }
       switch (e.code) {
         case 'KeyW': {
-          if (!controls[0]) { isNewDirection = true; }
+          if (!controls[0]) { isNewControls = true; }
           controls[0] = true;
           break;
         }
         case 'KeyD': {
-          if (!controls[1]) { isNewDirection = true; }
+          if (!controls[1]) { isNewControls = true; }
           controls[1] = true;
           break;
         }
         case 'KeyS': {
-          if (!controls[2]) { isNewDirection = true; }
+          if (!controls[2]) { isNewControls = true; }
           controls[2] = true;
           break;
         }
         case 'KeyA': {
-          if (!controls[3]) { isNewDirection = true; }
+          if (!controls[3]) { isNewControls = true; }
           controls[3] = true;
           break;
         }
         case 'Space': {
-          if (!controls[4]) { isNewDirection = true; }
+          if (!controls[4]) { isNewControls = true; }
           controls[4] = true;
           break;
         }
       }
-      if (isNewDirection) {
+      if (isNewControls) {
         setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
-        isNewDirection = false;
+        isNewControls = false;
       }
     });
 
     gameView.addEventListener('keyup', (e) => {
       switch (e.code) {
         case 'KeyW': {
-          isNewDirection = true;
+          isNewControls = true;
           controls[0] = false;
           break;
         }
         case 'KeyD': {
-          isNewDirection = true;
+          isNewControls = true;
           controls[1] = false;
           break;
         }
         case 'KeyS': {
-          isNewDirection = true;
+          isNewControls = true;
           controls[2] = false;
           break;
         }
         case 'KeyA': {
-          isNewDirection = true;
+          isNewControls = true;
           controls[3] = false;
           break;
         }
         case 'Space': {
-          isNewDirection = true;
+          isNewControls = true;
           controls[4] = false;
           break;
         }
       }
-      if (isNewDirection) {
+      if (isNewControls) {
         setTimeout(() => { this._socket.emit('player:change-controls', controls); }, this._randomLatencygMs);
-        isNewDirection = false;
+        isNewControls = false;
       }
     });
   }

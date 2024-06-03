@@ -4,25 +4,28 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class Room {
   /** @param {{ioServer: import('socket.io').Server, roomName: string}} param0 */
-  constructor({ ioServer, roomName }) {
+  constructor({ ioServer, roomName, playersLimit = 2, winningScore = 1, gameTimeLimit = 60000}) {
     this._ioServer = ioServer;
     this._id = uuidv4();
     this._name = roomName;
     /** @type {Socket[]} */
     this._players = [];
-    this._playersLimit = 8;
+    this._playersLimit = playersLimit;
 
-    this._winningScore = 4;
+    this._winningScore = winningScore;
     this._startTime = 0;
-    this._gameTimeLimit = 1800000; //ms
+    this._gameTimeLimit = gameTimeLimit; //ms
 
-    this._playersInactivityLimit = 180000; //ms
+    this._playersInactivityLimit = 15000; //ms
     this._playersActivity = new Map();
 
     /** @type {Game} */
-    this._game = new Game(this._playersLimit);
+    this._game = new Game();
+    //createSpawnPoints should go before buildStadium
+    this._game.createSpawnPoints(this._playersLimit);
+    this._game.buildStadium();
     this._sendUpdateRate = 1000 / 20;
-    this._sendUpdateIntervalId;
+    this._sendUpdateIntervalId = 0;
   }
   /** @param {import('socket.io').Socket} socket  */
   handlePlayerConnection(socket, name) {
