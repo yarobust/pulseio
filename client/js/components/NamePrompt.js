@@ -1,5 +1,5 @@
-export function NamePrompt ({handleSubmit, placeholder}){
-  const namePromptElm = document.createElement('div');
+export function NamePrompt({ handleSubmit, placeholder }) {
+  const namePromptElm = document.createElement('form');
   namePromptElm.id = 'name-prompt';
   const containerElm = document.createElement('div');
   containerElm.classList.add('name-prompt__container');

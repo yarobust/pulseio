@@ -16,19 +16,15 @@ export class Player extends Circle {
     const deltaAcceleration = this._acceleration * deltaTime;
     if (this._controls[0]) {
       this._yVelocity -= deltaAcceleration;
-      // this._serverYVelocity -= deltaAcceleration;
     }
     if (this._controls[1]) {
       this._xVelocity += deltaAcceleration;
-      // this._serverXVelocity += deltaAcceleration;
     }
     if (this._controls[2]) {
       this._yVelocity += deltaAcceleration;
-      // this._serverYVelocity += deltaAcceleration;
     }
     if (this._controls[3]) {
       this._xVelocity -= deltaAcceleration;
-      // this._serverXVelocity -= deltaAcceleration;
     }
     super.move(deltaTime);
   }
@@ -48,7 +44,7 @@ export class Player extends Circle {
 
   /** @param {import('../../../types').PlayerStateData} data */
   updateData(data) {
-    const {controls, ...restData} = data;
+    const { controls, ...restData } = data;
     super.updateData(restData);
     this._controls = data.controls;
   }

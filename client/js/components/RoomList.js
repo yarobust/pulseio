@@ -11,7 +11,6 @@ export function RoomList({ connectToRoom }) {
   containerElm.classList.add('room-list__container');
 
   const handleRoomListClick = (event) => {
-    // if (event.target.class)
     if (event.target.dataset.roomId) {
       connectToRoom(event.target.dataset.roomId);
     }

@@ -2,10 +2,10 @@
 node_modules/
 
 # Ignore build directories.
-/build
-/dist
+build
+dist
 
-# ignore log files, databases and images
+# ignore log files, databases
 logs/
 *.log
 npm-debug.log*
@@ -15,9 +15,7 @@ yarn-error.log*
 *.seed
 *.pid.lock
 *.sql
-*.sqlite
-diagrams/
-images/
+*.sqlite 
 
 # ignore packaged files
 *.7z

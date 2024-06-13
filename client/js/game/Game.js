@@ -66,15 +66,14 @@ export class Game {
   stop() {
     cancelAnimationFrame(this._mainLoopRequestId);
   }
-
-  updateGameState = (deltaTime) => {
+  updateGameState (deltaTime){
     this._players.forEach((player) => {
-      player.move(deltaTime);
       player.interpolate(deltaTime);
+      player.move(deltaTime);
     })
     this._ball.move(deltaTime);
     this._ball.interpolate(deltaTime);
-    //collision with walls (possible optimization when placing walls one after the other. if there is collision check also adjacent  wall)
+
     for (let wall of this._stadium.walls) {
       this._players.forEach((player) => {
         const pwClosestPoint = player.checkWallCollision(wall);
@@ -86,7 +85,6 @@ export class Game {
       const bwClosestPoint = this._ball.checkWallCollision(wall);
       bwClosestPoint && this._ball.resolveWallCollision(wall, bwClosestPoint);
     }
-
 
     //collision player-player
     for (let currentPlayer = 0; currentPlayer < this._players.length - 1; currentPlayer++) {
@@ -102,19 +100,10 @@ export class Game {
       if (player.checkCircleCollision(this._ball)) {
         player.resolveCircleCollision(this._ball);
       }
-    })
+    });
   }
-
-
   /** @param {import('../../types.js').GameStateData} data  */
-  matchServerState(data) {
-    //remove----------
-    for (let i = 0; i < this._players.length; i++) {
-      if (this._mainPlayerId === this._players[i].id && i%2 === 0) {
-        // return;
-      }
-    }
-    //------------
+  addServerState(data) {
     for (let i = 0; i < this._players.length; i++) {
       if (this._players[i].id !== data.players[i]?.id) {
         console.error('Players id mismatch');

@@ -85,26 +85,6 @@ export class Circle {
 
   /** @param {import('../line/Wall.js').Wall} wall  */
   resolveWallCollision(wall, closestPoint) {
-    // if (closestPoint.method === 'intersection') {
-    //   const v ={ x: this._x - closestPoint.x, y: this._y - closestPoint.y}
-    //   //Step 1: Normalize the axis vector a
-    //   const axisNorm = wall.normalize();
-    //   //Step 2: Calculate the distance from the circle center to the line
-    //   let dot = wall.dotProduct(axisNorm, v);
-    //   let vProj = {x: dot * axisNorm.x, y: dot * axisNorm.y};
-    //   // Step 3: Calculate the reflection vector
-    //   const reflectedVector = {
-    //     x: 2 * vProj.x - v.x,
-    //     y: 2 * vProj.y - v.y,  
-    //   }
-
-    //   this._x = closestPoint.x + reflectedVector.x + Math.sign(reflectedVector.x) * this._r;
-    //   this._y = closestPoint.y + reflectedVector.y + Math.sign(reflectedVector.y) * this._r; 
-    //   this._xVelocity = 1.99 * Math.sign(reflectedVector.x) * Math.abs(this._xVelocity);
-    //   this._yVelocity = 1.99 * Math.sign(reflectedVector.y) * Math.abs(this._xVelocity);
-    //   return;
-    // }
-
     if (closestPoint.method === 'intersection') {
       const perpendicular = wall.perpendicular();
       this._x = closestPoint.x + perpendicular.x * (this._r - 1);

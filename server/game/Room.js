@@ -36,7 +36,6 @@ export class Room {
       socket.disconnect(true);
       return;
     }
-    // console.log(`player ${socket.id} connected to room ${this._id}`);
     socket.on('disconnect', () => {
       this.handlePlayerDisconnection(socket);
     });
@@ -72,7 +71,6 @@ export class Room {
     this._waiting = false;
 
     this._game.start();
-    console.log('start game');
     this._startTime = performance.now();
     let previousPlayersActivityCheck = this._startTime;
 

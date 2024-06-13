@@ -214,7 +214,6 @@ export class Game {
 
   /** @param {number} deltaTime  */
   updateGameState(deltaTime) {
-    // console.log('game state update')
     this._players.forEach((player) => {
       player.move(deltaTime);
     })
@@ -295,21 +294,6 @@ export class Game {
     const goalLineY0 = this._height / 2 - goalLineSize / 2;
     const goalLineY1 = goalLineY0 + goalLineSize;
     const lineWidth = Math.round(BALL_RADIUS / 10);
-
-    // // //remove
-    // this._stadium.walls.push(new Wall({
-    //   x0: this._width / 2,
-    //   y0: this._height * 0.25,
-    //   x1: this._width * 0.75,
-    //   y1: this._height * 0.75,
-    //   lineWidth,
-    // }), new Wall({
-    //   x0: this._width * 0.25,
-    //   y0: this._height * 0.25,
-    //   x1: this._width * 0.5,
-    //   y1: this._height * 0.75,
-    //   lineWidth,
-    // }))
 
     //rectangle
     this._stadium.walls.push(new Wall({

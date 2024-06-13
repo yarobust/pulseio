@@ -32,7 +32,6 @@ export class Circle {
     } else {
       this._yVelocity *= 1 - deltaFriction;
     }
-    //for CCD
     this._prevX = this._x;
     this._prevY = this._y;
 
@@ -149,16 +148,8 @@ export class Circle {
 
   /** @param {CanvasRenderingContext2D} ctx */
   draw(ctx) {
-    //debug
     ctx.beginPath();
-    ctx.arc(this._serverX, this._serverY, this._r - this._lineWidth / 2, 0, 2 * Math.PI);
-    ctx.strokeStyle = this._strokeStyle;
-    ctx.lineWidth = this._lineWidth;
-    ctx.stroke();
-
-    ctx.beginPath();
-    //todo: round position
-    ctx.arc(this._x, this._y, this._r - this._lineWidth, 0, 2 * Math.PI);
+    ctx.arc(this._x, this._y, this._r - this._lineWidth / 2, 0, 2 * Math.PI);
     ctx.strokeStyle = this._strokeStyle;
     ctx.lineWidth = this._lineWidth;
     ctx.stroke();

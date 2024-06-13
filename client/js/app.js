@@ -12,15 +12,11 @@ export class App {
     this._appElm = appElm;
     this._socket = null;
     this._game = null;
-    // for debug purposes
-    this._randomLatencygMs = 100 || (Math.random() < 0.5? 1000 : 10);
-    alert(this._randomLatencygMs)
     this._gameTimer = 0;
     this._gameTimerId = 0;
     this.userName = `user${Math.floor(Math.random() * 1000)}`;
   }
   //add htmlElement to app root
-
   showNamePrompt(){
     this._appElm.replaceChildren(NamePrompt({
       handleSubmit: (name) => {
@@ -29,6 +25,7 @@ export class App {
       },
       placeholder: this.userName
     }));
+    
   }
   
   
@@ -67,10 +64,16 @@ export class App {
 
   setGameScore(score) {
     const scoreElm = document.querySelector('#game-view .bar__score');
+    if(!scoreElm) {
+      return;
+    }
     scoreElm.textContent = `${score[0]}:${score[1]}`;
   }
   setGameTimer(timeLeft) {
     const timerElm = document.querySelector('#game-view .bar__timer');
+    if(!timerElm) {
+      return;
+    }
     clearInterval(this._gameTimerId);
     if (timeLeft < 0) {
       timerElm.textContent = 'wait';
@@ -144,10 +147,8 @@ export class App {
     this._game.addPlayers(data.players);
     this._game.addBall(data.ball);
     this._game.start();
-
-    // should be registered after game creation. Reason: Possibility earlier invoke than 'game:init' event
     this._socket.on('game:update', /** @param {import('../types.js').GameStateData} data */(data) => {
-      setTimeout(() => { this._game.matchServerState(data); }, this._randomLatencygMs);
+       this._game.addServerState(data);
     });
 
     this._socket.on('game:add-player', /** @param {import('../types.js').PlayerInitData} data */(data) => {
@@ -169,7 +170,6 @@ export class App {
       timeLeft && this.setGameTimer(timeLeft);
       this._game.reset(restData);
       this._game.start();
-
       gameViewElm.focus();
     })
 
@@ -223,8 +223,7 @@ export class App {
       }
       if (isNewControls) {
         this._game.updateMainPlayerControls(controls);
-        const copyControls = [...controls];
-        setTimeout(() => { this._socket.emit('player:change-controls', copyControls); }, this._randomLatencygMs);
+        this._socket.emit('player:change-controls', controls);
         isNewControls = false;
       }
     });
@@ -259,8 +258,7 @@ export class App {
       }
       if (isNewControls) {
         this._game.updateMainPlayerControls(controls);
-        const copyControls = [...controls];
-        setTimeout(() => { this._socket.emit('player:change-controls', copyControls); }, this._randomLatencygMs);
+        this._socket.emit('player:change-controls', controls);
         isNewControls = false;
       }
     });

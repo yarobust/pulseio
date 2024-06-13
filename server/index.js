@@ -10,8 +10,10 @@ const app = express();
 const server = createServer(app); 
 const ioServer = new Server(server);
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-app.use(express.static(join(__dirname, '../client')));
+if(!process.env.PRODUCTION) {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  app.use(express.static(join(__dirname, '../client/dist')));
+}
 
 //return information about available rooms
 app.get('/rooms', (req, res) => {
@@ -40,7 +42,6 @@ ioServer.use((socket, next) => {
 })
 
 ioServer.on('connection', (socket) => {
-  console.log('new connection');
   const {roomId, name} = socket.handshake.query;
   const roomToConnect = roomList.find((room) => room.id === roomId);
   if (!roomToConnect || typeof name !== 'string') {

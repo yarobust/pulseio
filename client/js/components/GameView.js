@@ -19,7 +19,7 @@ export function GameView({handleExit}) {
   containerElm.classList.add('game-view__container');
 
   function handleSettingsChange(settings) {
-    if (settings.screenControls){
+    if (settings.screenControls) {
       canvasContainerElm.append(ScreenControls());
     } else {
       canvasContainerElm.querySelector('#screen-controls')?.remove();
@@ -48,7 +48,7 @@ export function GameView({handleExit}) {
 
   const settingsButton = document.createElement('button');
   settingsButton.classList.add('bar__settings-btn', 'settings-btn');
-  settingsButton.addEventListener('click', (e)=>{settingsDialogElm.classList.remove('settings-dialog--hidden')});
+  settingsButton.addEventListener('click', (e) => { settingsDialogElm.classList.remove('settings-dialog--hidden') });
 
   //game
   const canvasContainerElm = document.createElement('div');

@@ -39,7 +39,6 @@ export class Player extends Circle {
       const angle = Math.atan2(dy, dx);
       circle.xVelocity = -Math.cos(angle) * circle._acceleration * 2000;
       circle.yVelocity = -Math.sin(angle) * circle._acceleration * 2000;
-      // console.log(circle.xVelocity, circle.yVelocity);
       this._controls[4] = false;
     }
   }
